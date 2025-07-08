@@ -51,7 +51,7 @@ PerfScout.enableStrictMode(penaltyCallback = { violation ->
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.github.deekshasinghal326:perfScout:1.0.0")
+    implementation("com.github.deekshasinghal326:perfScout:1.0.1")
 }
 ```
 
@@ -59,7 +59,7 @@ dependencies {
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.github.deekshasinghal326:perfScout:1.0.0")
+    implementation("com.github.deekshasinghal326:perfScout:1.0.1")
 }
 
 // Add local Maven repository
