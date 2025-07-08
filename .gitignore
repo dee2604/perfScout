@@ -1,15 +1,47 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+# Gradle
+.gradle/
+build/
+*/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local configuration file (sdk path, etc)
 local.properties
+
+# Log/OS Files
+*.log
+*.swp
+.DS_Store
+
+# Android Studio
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/
+
+# Kotlin
+.kotlin/
+
+# Generated files
+captures/
+output.json
+
+# Misc
+*.keystore
+*.jks
+
+# Mac
+__MACOSX/
+
+# Test/coverage
+*.ec
+coverage/
+
+# Other
+*.orig
+*.rej
+
+# Ignore sample app build outputs
+sample/build/
