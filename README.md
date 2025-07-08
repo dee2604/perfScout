@@ -1,5 +1,7 @@
 # PerfScout
 
+[![JitPack](https://jitpack.io/v/deekshasinghal326/perfScout.svg)](https://jitpack.io/#deekshasinghal326/perfScout)
+
 **PerfScout** is a modular Android library that provides easy, permission-less access to vital app and device performance metrics with a single method call per feature.
 
 ---
