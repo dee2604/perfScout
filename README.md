@@ -62,9 +62,9 @@ dependencies {
     implementation("com.github.deekshasinghal326:perfScout:1.0.1")
 }
 
-// Add local Maven repository
+// in settings.gradle
 repositories {
-    mavenLocal()
+    maven { url = uri("https://jitpack.io") }
 }
 ```
 
