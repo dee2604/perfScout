@@ -45,6 +45,27 @@ PerfScout.enableStrictMode(penaltyCallback = { violation ->
 
 ### 1. Add as a dependency
 
+#### Maven Central (Recommended)
+```kotlin
+// build.gradle.kts
+dependencies {
+    implementation("io.github.deekshasinghal:perfscout:1.0.0")
+}
+```
+
+#### Local Maven Repository (Development)
+```kotlin
+// build.gradle.kts
+dependencies {
+    implementation("io.github.deekshasinghal:perfscout:1.0.0")
+}
+
+// Add local Maven repository
+repositories {
+    mavenLocal()
+}
+```
+
 > _If you're using this as a module, add to your `settings.gradle` and `build.gradle` as appropriate._
 
 ### 2. Startup Time Tracking Setup (Optional)
