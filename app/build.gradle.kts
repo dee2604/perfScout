@@ -53,8 +53,8 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
 
-                groupId = "io.github.deekshasinghal"
-                artifactId = "perfscout"
+                groupId = "com.github.deekshasinghal326"
+                artifactId = "perfScout"
                 version = "1.0.0"
 
                 pom {
