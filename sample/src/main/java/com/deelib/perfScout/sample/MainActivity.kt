@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,16 +14,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.deelib.perfScout.PerfScout
+import com.deelib.perfScout.*
+import com.deelib.perfScout.core.PerfResult
 import com.deelib.perfScout.sample.ui.theme.PerfScoutTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Record startup time for PerfScout
-        PerfScout.recordActivityOnCreate(this)
-        
+        PerfScout.startupTime.recordActivityOnCreate(this)
         enableEdgeToEdge()
         setContent {
             PerfScoutTheme {
@@ -32,12 +32,11 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            // Record first draw time when window gets focus (after first draw)
-            PerfScout.recordFirstDraw(this)
+            PerfScout.startupTime.recordFirstDraw(this)
         }
     }
 }
@@ -47,6 +46,8 @@ class MainActivity : ComponentActivity() {
 fun PerfScoutDashboard() {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -59,167 +60,162 @@ fun PerfScoutDashboard() {
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(bottom = 16.dp)
         )
-        
-        // Device Performance Section
-        Text("Device Performance", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(vertical = 8.dp))
-        FeatureSection("CPU Info") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                result.value = PerfScout.getCpuInfo().toString()
-            }) { Text("Get CPU Info") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
+
+        SectionHeader("Device Performance")
+
+        MetricFeature("CPU Info") {
+            scope.launch {
+                it.value = formatResult(PerfScout.cpu.getAsync())
+            }
         }
-        FeatureSection("RAM Info") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                result.value = PerfScout.getRamInfo(context).toString()
-            }) { Text("Get RAM Info") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
+
+        MetricFeature("RAM Info") {
+            it.value = formatResult(PerfScout.ram.get(context))
         }
-        FeatureSection("GPU Info") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                result.value = PerfScout.getGpuInfo().toString()
-            }) { Text("Get GPU Info") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
+
+        MetricFeature("Thermal Info") {
+            it.value = formatResult(PerfScout.thermal.get(context))
         }
-        FeatureSection("Thermal Info") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                result.value = PerfScout.getThermalInfo(context).toString()
-            }) { Text("Get Thermal Info") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
+
+        MetricFeature("Battery Info") {
+            it.value = formatResult(PerfScout.battery.get(context))
         }
-        FeatureSection("Battery Info") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                result.value = PerfScout.getBatteryInfo(context).toString()
-            }) { Text("Get Battery Info") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
+
+        MetricFeature("Device Info") {
+            it.value = formatResult(PerfScout.device.get(context))
         }
-        FeatureSection("Device Info") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                result.value = PerfScout.getDeviceInfo(context).toString()
-            }) { Text("Get Device Info") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
+
+        SectionHeader("App Performance")
+
+        MetricFeature("App Memory Info") {
+            it.value = formatResult(PerfScout.appMemory.get())
         }
-        
-        // App Performance Section
-        Text("App Performance", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(vertical = 8.dp))
-        FeatureSection("App Memory Info") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                result.value = PerfScout.getAppMemoryInfo().toString()
-            }) { Text("Get App Memory Info") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
+
+        MetricFeature("App Uptime Info") {
+            it.value = formatResult(PerfScout.appUptime.get(context))
         }
-        FeatureSection("App CPU Usage") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                PerfScout.getAppCpuUsageInfo({ cpuInfo ->
-                    result.value = cpuInfo.toString()
-                }, 1000)
-            }) { Text("Get App CPU Usage (1s)") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
+
+        MetricFeature("GC Stats Info") {
+            it.value = formatResult(PerfScout.gcStats.get())
         }
-        FeatureSection("App Uptime Info") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                result.value = PerfScout.getAppUptimeInfo(context).toString()
-            }) { Text("Get App Uptime Info") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
+
+        MetricFeature("Frame Rendering Info(3s)") {
+            scope.launch {
+                it.value = formatResult(PerfScout.getFrameRenderingInfoAsync(3000))
+            }
         }
-        FeatureSection("GC Stats Info") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                result.value = PerfScout.getGcStatsInfo().toString()
-            }) { Text("Get GC Stats Info") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
+
+        SectionHeader("Network")
+
+        MetricFeature("Network Usage Info") {
+            it.value = formatResult(PerfScout.network.get(context))
         }
-        FeatureSection("Frame Rendering Info") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                PerfScout.getFrameRenderingInfo(3000) { frameInfo ->
-                    result.value = frameInfo.toString()
+
+        SectionHeader("System Info")
+
+        MetricFeature("Storage Usage Info") {
+            it.value = formatResult(PerfScout.storage.get(context))
+        }
+
+        MetricFeature("Thread/Process Info") {
+            it.value = formatResult(PerfScout.threadProcess.get(context))
+        }
+
+        SectionHeader("Advanced Features")
+
+        MetricFeature("Startup Time Info") {
+            it.value = formatResult(PerfScout.startupTime.get(context))
+        }
+
+        MetricFeature("Media Quality Recommendation") {
+            it.value = formatResult(PerfScout.mediaQuality.get(context))
+        }
+
+        // Showcase Crash and ANR
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            shape = RoundedCornerShape(4.dp),
+            elevation = CardDefaults.cardElevation(4.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text("Crash & ANR Demo", style = MaterialTheme.typography.labelLarge)
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = { throw RuntimeException("Deliberate crash for PerfScout demo!") },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                ) {
+                    Text("Trigger Crash (for demo)")
                 }
-            }) { Text("Get Frame Rendering Info (3s)") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        // Block main thread for 10 seconds to trigger ANR
+                        val start = System.currentTimeMillis()
+                        while (System.currentTimeMillis() - start < 10_000) {
+                            // Busy wait
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                ) {
+                    Text("Trigger ANR (10s block)")
+                }
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "WARNING: These buttons will crash or freeze the app to demonstrate PerfScout's monitoring features.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
         }
-        
-        // Network Section
-        Text("Network", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(vertical = 8.dp))
-        FeatureSection("Network Usage Info") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                result.value = PerfScout.getNetworkUsageInfo(context).toString()
-            }) { Text("Get Network Usage Info") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
-        }
-        FeatureSection("Network Quality Info") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                result.value = PerfScout.getNetworkQualityInfo(context).toString()
-            }) { Text("Get Network Quality Info") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
-        }
-
-        
-        // System Info Section
-        Text("System Info", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(vertical = 8.dp))
-        FeatureSection("Storage Usage Info") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                result.value = PerfScout.getStorageUsageInfo(context).toString()
-            }) { Text("Get Storage Usage Info") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
-        }
-        FeatureSection("Thread/Process Info") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                result.value = PerfScout.getThreadProcessInfo(context).toString()
-            }) { Text("Get Thread/Process Info") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
-        }
-
-
-        
-        // Advanced Features Section
-        Text("Advanced Features", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(vertical = 8.dp))
-
-        FeatureSection("Startup Time Info") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                result.value = PerfScout.getStartupTimeInfoForPackage(context.packageName).toString()
-            }) { Text("Get Startup Time Info") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
-        }
-        FeatureSection("Media Quality Recommendation") {
-            val result = remember { mutableStateOf("") }
-            Button(onClick = {
-                val quality = PerfScout.getMediaQualityRecommendation(context)
-                val analysis = PerfScout.getMediaQualityAnalysis(context)
-                result.value = "Recommended Quality: $quality\nAnalysis: $analysis"
-            }) { Text("Get Media Quality Recommendation") }
-            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
-        }
-
-
     }
 }
 
 @Composable
-fun FeatureSection(title: String, content: @Composable () -> Unit) {
+fun SectionHeader(title: String) {
+    Text(
+        title,
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(vertical = 8.dp)
+    )
+}
+
+@Composable
+fun MetricFeature(title: String, onClick: (MutableState<String>) -> Unit) {
+    val result = remember { mutableStateOf("") }
+
     Card(
-        elevation = CardDefaults.cardElevation(4.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(8.dp),
+        shape = RoundedCornerShape(4.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(8.dp))
-            content()
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(title, style = MaterialTheme.typography.labelLarge)
+            Spacer(Modifier.width(8.dp))
+            Button(onClick = { onClick(result) }) {
+                Text("Get $title")
+            }
+            if (result.value.isNotEmpty()) Text(result.value, Modifier.padding(top = 8.dp))
         }
     }
+
 }
+
+fun <T> formatResult(result: PerfResult<T>): String = when (result) {
+    is PerfResult.Success -> result.info.toString()
+    is PerfResult.Error -> "Error: ${result.message}"
+}
+
+

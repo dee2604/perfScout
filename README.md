@@ -2,7 +2,22 @@
 
 [![JitPack](https://jitpack.io/v/deekshasinghal326/perfScout.svg)](https://jitpack.io/#deekshasinghal326/perfScout)
 
-**PerfScout** is a modular Android library that provides easy, permission-less access to vital app and device performance metrics with a single method call per feature.
+**PerfScout** provides unified, safe, and modular access to all vital app and device performance metrics and monitoring features through a single, easy-to-use API.
+
+- All metrics are returned as `PerfResult` (Success/Error) for robust error handling.
+- Main categories:
+  - **Device metrics:** CPU, RAM, GPU, Battery, Thermal, Device Info
+  - **App metrics:** App Memory, App Uptime, GC Stats, Startup Time
+  - **System metrics:** Storage, Thread/Process, Network Quality
+  - **Advanced features:** Frame Rendering/Jank, Media Quality Recommendation
+  - **Monitoring:** Crash, ANR, Jank, StrictMode
+- **Crash monitoring:**
+  - The crash listener will be called for any uncaught exception in the host app, any library, or PerfScout itself.
+  - It does not catch handled exceptions and does not prevent the app from crashing.
+  - It chains to any previous uncaught exception handler (e.g., Crashlytics).
+- **Startup time tracking:**
+  - Requires explicit calls to `startupTime.recordActivityOnCreate` and `startupTime.recordFirstDraw` in your MainActivity lifecycle.
+- All features are modular and can be used independently.
 
 ---
 
@@ -13,7 +28,6 @@
 - ANR Detection (callback, safe, non-intrusive)
 - Crash Monitoring (callback, chains to previous handler)
 - Jank (Slow/Frozen Frame) Monitoring (callback, rolling window)
-- Memory Leak Warning (simple heuristic, callback)
 - Media Quality Recommendation (for multimedia apps)
 - StrictMode Violation Reporting (opt-in, callback, API 28+)
 - Network Quality (backward compatible, no ANR risk)
@@ -32,9 +46,6 @@ PerfScout.setAnrListener { anrInfo ->
 }
 PerfScout.setJankListener { jankInfo ->
     Log.w("PerfScout", "Jank detected: $jankInfo")
-}
-PerfScout.monitorMemoryLeaks(context) { isLeaking, usageHistory ->
-    if (isLeaking) Log.w("PerfScout", "Possible memory leak: $usageHistory")
 }
 PerfScout.enableStrictMode(penaltyCallback = { violation ->
     Log.w("PerfScout", "StrictMode violation: $violation")
@@ -78,13 +89,13 @@ For accurate startup time measurements, add these calls to your MainActivity:
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        PerfScout.recordActivityOnCreate(this)
+        PerfScout.startupTime.recordActivityOnCreate(this)
         // ... rest of onCreate
     }
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            PerfScout.recordFirstDraw(this)
+            PerfScout.startupTime.recordFirstDraw(this)
         }
     }
 }
@@ -94,84 +105,128 @@ class MainActivity : AppCompatActivity() {
 
 ---
 
-## Usage Examples
+## Usage Examples (New API)
 
 ### Basic Metrics
 ```kotlin
-val cpuInfo = PerfScout.getCpuInfo()
-val ramInfo = PerfScout.getRamInfo(context)
-val gpuInfo = PerfScout.getGpuInfo()
-val batteryInfo = PerfScout.getBatteryInfo(context)
-val thermalInfo = PerfScout.getThermalInfo(context)
-val appMemory = PerfScout.getAppMemoryInfo()
-val appUptime = PerfScout.getAppUptimeInfo(context)
-val gcStats = PerfScout.getGcStatsInfo()
-val networkUsage = PerfScout.getNetworkUsageInfo(context)
-val networkQuality = PerfScout.getNetworkQualityInfo(context)
-val storageUsage = PerfScout.getStorageUsageInfo(context)
+// All metrics return PerfResult<T> (Success or Error)
+val cpuResult = PerfScout.cpu.get() // or getAsync()
+val ramResult = PerfScout.ram.get(context)
+val gpuResult = PerfScout.gpu.get()
+val batteryResult = PerfScout.battery.get(context)
+val thermalResult = PerfScout.thermal.get(context)
+val appMemoryResult = PerfScout.appMemory.get()
+val appUptimeResult = PerfScout.appUptime.get(context)
+val gcStatsResult = PerfScout.gcStats.get()
+val networkResult = PerfScout.network.get(context)
+val storageResult = PerfScout.storage.get(context)
+val threadResult = PerfScout.threadProcess.get(context)
+val mediaQualityResult = PerfScout.mediaQuality.get(context)
 ```
 
-### Advanced Features
+**Handling results:**
 ```kotlin
-// Startup time tracking (requires setup in MainActivity)
-val startupInfo = PerfScout.getStartupTimeInfo()
-val startupInfoForPackage = PerfScout.getStartupTimeInfoForPackage(packageName)
-
-// Frame rendering analysis
-PerfScout.getFrameRenderingInfo(3000) { frameInfo ->
-    println("Performance Score: ${frameInfo.performanceScore}")
-    println("Jank Percentage: ${frameInfo.jankPercentage}%")
+when (cpuResult) {
+    is PerfResult.Success -> Log.d("PerfScout", "CPU: ${cpuResult.info}")
+    is PerfResult.Error -> Log.e("PerfScout", "Error: ${cpuResult.message}")
 }
+```
 
-// App CPU usage monitoring
-PerfScout.getAppCpuUsageInfo({ cpuInfo ->
-    println("CPU Usage: ${cpuInfo.usagePercent}%")
-}, 1000)
+### Startup Time Tracking
 
-// Memory leak warning (simple heuristic)
-PerfScout.monitorMemoryLeaks(context) { isLeaking, usageHistory ->
-    if (isLeaking) Log.w("PerfScout", "Possible memory leak: $usageHistory")
+Add these calls to your `MainActivity`:
+
+```kotlin
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    PerfScout.startupTime.recordActivityOnCreate(this)
+    // ...
 }
+override fun onWindowFocusChanged(hasFocus: Boolean) {
+    super.onWindowFocusChanged(hasFocus)
+    if (hasFocus) {
+        PerfScout.startupTime.recordFirstDraw(this)
+    }
+}
+```
 
-// Crash monitoring
+Get startup time info:
+```kotlin
+val startupResult = PerfScout.startupTime.get(context)
+```
+
+---
+
+### Frame Rendering/Jank
+
+```kotlin
+lifecycleScope.launch {
+    val frameResult = PerfScout.getFrameRenderingInfoAsync(3000)
+    when (frameResult) {
+        is PerfResult.Success -> Log.d("PerfScout", "Frame Info: ${frameResult.info}")
+        is PerfResult.Error -> Log.e("PerfScout", "Error: ${frameResult.message}")
+    }
+}
+```
+
+---
+
+### Crash & ANR Monitoring
+
+**Set up listeners:**
+```kotlin
 PerfScout.setCrashListener { crashInfo ->
     Log.e("PerfScout", "Crash detected: $crashInfo")
 }
-
-// ANR monitoring
 PerfScout.setAnrListener { anrInfo ->
     Log.w("PerfScout", "ANR detected: $anrInfo")
 }
+```
 
-// Jank monitoring
+**How Crash Monitoring Works:**
+- The crash listener will be called for **any uncaught exception** in the host app, any library, or PerfScout itself.
+- It does **not** catch exceptions that are handled by try/catch.
+- It does **not** prevent the app from crashing; the process will still terminate after your callback.
+- PerfScout will **chain to any previous uncaught exception handler** (such as Crashlytics, Sentry, or the system default), so it will not interfere with other crash reporting tools.
+
+| Scenario                        | Will PerfScout crash listener be called? |
+|----------------------------------|:---------------------------------------:|
+| Uncaught exception in host code  | Yes                                     |
+| Uncaught exception in library    | Yes                                     |
+| Uncaught exception in PerfScout  | Yes                                     |
+| Exception caught by try/catch    | No                                      |
+| ANR (App Not Responding)         | No (use ANR listener)                   |
+
+**Demo in Sample App:**
+- In the "Advanced Features" section, use the "Trigger Crash" button to throw a deliberate exception.
+- Use the "Trigger ANR" button to block the main thread for 10 seconds.
+- Your listeners will be called when these events occur.
+
+---
+
+### StrictMode, Jank, and More
+
+```kotlin
 PerfScout.setJankListener { jankInfo ->
     Log.w("PerfScout", "Jank detected: $jankInfo")
 }
-
-// StrictMode violation reporting (opt-in, for debug builds)
 PerfScout.enableStrictMode(penaltyCallback = { violation ->
     Log.w("PerfScout", "StrictMode violation: $violation")
 })
-
-// GPU info with OpenGL context (for apps using OpenGL)
-val gl10: GL10 = // ... get from your renderer
-val gpuInfo = PerfScout.getGpuInfo(gl10)
-
-// Media quality recommendation for multimedia apps
-val mediaQuality = PerfScout.getMediaQualityRecommendation(context)
-val mediaAnalysis = PerfScout.getMediaQualityAnalysis(context)
 ```
 
 ---
 
 ## Notes & Best Practices
 
+- All metrics are safe: if a metric is unavailable, you get a `PerfResult.Error`.
+- Startup time tracking requires the host app to call the lifecycle methods.
+- Crash/ANR demo buttons are for testing only—remove in production.
 - Frame rendering analysis requires UI thread access and should be used during user interaction.
 - Thermal information availability varies by device and Android version.
 - Network quality measurements may not work on all devices or network configurations.
-- GPU info requires OpenGL context for accurate data. Use `getGpuInfo(gl10)` for apps with OpenGL.
+- GPU info may not be available on all devices.
 - All features are modular and can be used independently.
-- Startup time tracking requires manual lifecycle callbacks in MainActivity.
 - Memory leak warning is a simple heuristic: it triggers if memory usage grows by a set threshold over a rolling window. For deep leak analysis, use LeakCanary in your app.
 - Crash monitoring uses a global uncaught exception handler and will not interfere with existing crash reporting (it chains to previous handlers).
 - Jank monitoring reports the percentage of slow (>16ms) and frozen (>700ms) frames every 5 seconds.
