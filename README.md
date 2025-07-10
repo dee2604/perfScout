@@ -71,7 +71,7 @@ PerfScout.enableStrictMode(penaltyCallback = { violation ->
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.github.deekshasinghal326:perfScout:1.1.1")
+    implementation("com.github.deekshasinghal326:perfScout:1.1.2")
 }
 ```
 
@@ -79,7 +79,7 @@ dependencies {
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.github.deekshasinghal326:perfScout:1.1.1")
+    implementation("com.github.deekshasinghal326:perfScout:1.1.2")
 }
 
 // in settings.gradle
