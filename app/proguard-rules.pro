@@ -1,15 +1,14 @@
-# Keep the PerfScout public API (including companion object methods)
+# Keep the PerfScout public API (including all methods and fields)
 -keep class com.deelib.perfScout.PerfScout { *; }
 
-# Keep all model classes (data classes used as return types)
--keep class com.deelib.perfScout.model.** { *; }
+# Keep all API interfaces and delegates
+-keep class com.deelib.perfScout.api.** { *; }
 
-# Keep all provider classes (if you want to allow reflection or debugging)
-#-keep class com.deelib.perfScout.provider.** { *; }
+# Keep all metric/data/provider classes in all subpackages
+-keep class com.deelib.perfScout.** { *; }
 
 # Keep annotations (optional, but good for libraries)
 -keepattributes *Annotation*
 
 # Keep line number and source file for better stack traces (optional)
 -keepattributes SourceFile,LineNumberTable
-
