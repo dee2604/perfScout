@@ -23,7 +23,7 @@
 
 ## Features at a Glance
 
-- CPU, RAM, GPU, Battery, Thermal, Network, Storage, Thread/Process, App Memory, App CPU, GC, App Uptime, Device Info
+- CPU, RAM, GPU, Battery, Thermal, Network, Storage, Thread/Process, App Memory, App CPU, GC, App Uptime, Device Info, Frame Rendering
 - Startup Time (cold start, with clear setup instructions)
 - ANR Detection (callback, safe, non-intrusive)
 - Crash Monitoring (callback, chains to previous handler)
@@ -122,6 +122,7 @@ val networkResult = PerfScout.network.get(context)
 val storageResult = PerfScout.storage.get(context)
 val threadResult = PerfScout.threadProcess.get(context)
 val mediaQualityResult = PerfScout.mediaQuality.get(context)
+val frameRenderingResult = PerfScout.frameRendering.get()
 ```
 
 **Handling results:**
@@ -159,6 +160,16 @@ val startupResult = PerfScout.startupTime.get(context)
 
 ### Frame Rendering/Jank
 
+**Using the new delegate (recommended):**
+```kotlin
+val frameResult = PerfScout.frameRendering.get()
+when (frameResult) {
+    is PerfResult.Success -> Log.d("PerfScout", "Frame Info: ${frameResult.info}")
+    is PerfResult.Error -> Log.e("PerfScout", "Error: ${frameResult.message}")
+}
+```
+
+**Using the legacy async method:**
 ```kotlin
 lifecycleScope.launch {
     val frameResult = PerfScout.getFrameRenderingInfoAsync(3000)

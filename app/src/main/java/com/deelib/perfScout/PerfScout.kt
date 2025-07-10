@@ -28,43 +28,54 @@ import android.content.Context
 import android.os.Build
 import com.deelib.perfScout.anr.AnrInfo
 import com.deelib.perfScout.anr.AnrMonitorProvider
+import com.deelib.perfScout.battery.BatteryInfo
 import com.deelib.perfScout.battery.BatteryInfoProvider
+import com.deelib.perfScout.core.MetricDelegate
+import com.deelib.perfScout.core.MetricDelegateWithContext
+import com.deelib.perfScout.core.MetricProvider
 import com.deelib.perfScout.core.PerfResult
+import com.deelib.perfScout.core.safeCall
+import com.deelib.perfScout.cpu.CpuInfo
 import com.deelib.perfScout.cpu.CpuInfoProvider
 import com.deelib.perfScout.crash.CrashInfo
 import com.deelib.perfScout.crash.CrashMonitorProvider
+import com.deelib.perfScout.device.DeviceInfo
 import com.deelib.perfScout.device.DeviceInfoProvider
 import com.deelib.perfScout.frame.FrameRenderingInfo
 import com.deelib.perfScout.frame.FrameRenderingInfoProvider
+import com.deelib.perfScout.gc.GcStatsInfo
 import com.deelib.perfScout.gc.GcStatsInfoProvider
+import com.deelib.perfScout.gpu.GpuInfo
+import com.deelib.perfScout.gpu.GpuInfoProvider
 import com.deelib.perfScout.jank.JankInfo
 import com.deelib.perfScout.jank.JankMonitorProvider
+import com.deelib.perfScout.media.MediaQualityLevel
+import com.deelib.perfScout.media.MediaQualityProvider
+import com.deelib.perfScout.memory.AppMemoryInfo
 import com.deelib.perfScout.memory.AppMemoryInfoProvider
+import com.deelib.perfScout.network.NetworkQualityInfo
 import com.deelib.perfScout.network.NetworkQualityInfoProvider
+import com.deelib.perfScout.ram.RamInfo
 import com.deelib.perfScout.ram.RamInfoProvider
+import com.deelib.perfScout.startup.StartupTimeInfo
+import com.deelib.perfScout.startup.StartupTimeInfoProvider
+import com.deelib.perfScout.storage.StorageUsageInfo
 import com.deelib.perfScout.storage.StorageUsageInfoProvider
 import com.deelib.perfScout.strictmode.StrictModeMonitorProvider
 import com.deelib.perfScout.strictmode.StrictModeViolationInfo
+import com.deelib.perfScout.thermal.ThermalInfo
 import com.deelib.perfScout.thermal.ThermalInfoProvider
+import com.deelib.perfScout.thread.ThreadProcessInfo
 import com.deelib.perfScout.thread.ThreadProcessInfoProvider
+import com.deelib.perfScout.uptime.AppUptimeInfo
 import com.deelib.perfScout.uptime.AppUptimeInfoProvider
-import com.deelib.perfScout.gpu.GpuInfoProvider
-import com.deelib.perfScout.media.MediaQualityProvider
-import com.deelib.perfScout.startup.StartupTimeInfo
-import com.deelib.perfScout.startup.StartupTimeInfoProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 
-inline fun <T> safeCall(errorMessage: String, block: () -> T): PerfResult<T> = try {
-    PerfResult.Success(block())
-} catch (e: Exception) {
-    PerfResult.Error("$errorMessage: ${e.message}", e)
-}
 
 interface StartupTimeDelegate {
     fun recordActivityOnCreate(context: Context)
@@ -75,40 +86,12 @@ interface StartupTimeDelegate {
 }
 
 
-inline fun <T> CoroutineScope.launchWithCallback(
-    crossinline block: suspend () -> T,
-    crossinline callback: (T) -> Unit
-) {
-    launch {
-        val result = block()
-        withContext(Dispatchers.Main) { callback(result) }
-    }
-}
-
-interface MetricProvider<ContextArg, InfoType> {
-    fun fetch(context: ContextArg): InfoType
-    fun errorMessage(): String
-
-    fun sync(context: ContextArg): PerfResult<InfoType> =
-        safeCall(errorMessage()) { fetch(context) }
-
-    suspend fun async(context: ContextArg): PerfResult<InfoType> =
-        withContext(Dispatchers.IO) { sync(context) }
-
-    fun async(
-        context: ContextArg,
-        callback: (PerfResult<InfoType>) -> Unit,
-        scope: CoroutineScope
-    ) =
-        scope.launchWithCallback({ async(context) }, callback)
-}
-
 class ContextMetricDelegate<C, R>(
     private val provider: MetricProvider<C, R>,
     private val scope: CoroutineScope
-) {
-    fun get(context: C): PerfResult<R> = provider.sync(context)
-    suspend fun getAsync(context: C): PerfResult<R> = provider.async(context)
+) : MetricDelegateWithContext<C, R> {
+    override fun get(context: C): PerfResult<R> = provider.sync(context)
+    override suspend fun getAsync(context: C): PerfResult<R> = provider.async(context)
     fun getAsync(context: C, callback: (PerfResult<R>) -> Unit) =
         provider.async(context, callback, scope)
 }
@@ -116,9 +99,9 @@ class ContextMetricDelegate<C, R>(
 class SimpleMetricDelegate<R>(
     private val provider: MetricProvider<Unit, R>,
     private val scope: CoroutineScope
-) {
-    fun get(): PerfResult<R> = provider.sync(Unit)
-    suspend fun getAsync(): PerfResult<R> = provider.async(Unit)
+) : MetricDelegate<R> {
+    override fun get(): PerfResult<R> = provider.sync(Unit)
+    override suspend fun getAsync(): PerfResult<R> = provider.async(Unit)
     fun getAsync(callback: (PerfResult<R>) -> Unit) =
         provider.async(Unit, callback, scope)
 }
@@ -132,37 +115,13 @@ private val metricScopes = ConcurrentHashMap<String, CoroutineScope>()
 private fun scopeFor(name: String): CoroutineScope =
     metricScopes.getOrPut(name) { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
 
-/**
- * PerfScout: Unified Android Performance & Usage Metrics Library
- *
- * PerfScout provides safe, modular, and permissionless access to all vital app and device performance metrics
- * and monitoring features through a single, unified API surface.
- *
- * - All metrics are returned as [PerfResult] (Success/Error) for robust error handling.
- * - Main categories:
- *   - Device metrics: CPU, RAM, GPU, Battery, Thermal, Device Info
- *   - App metrics: App Memory, App Uptime, GC Stats, Startup Time
- *   - System metrics: Storage, Thread/Process, Network Quality
- *   - Advanced features: Frame Rendering/Jank, Media Quality Recommendation
- *   - Monitoring: Crash, ANR, Jank, StrictMode
- *
- * Crash monitoring:
- * - The crash listener will be called for any uncaught exception in the host app, any library, or PerfScout itself.
- * - It does not catch handled exceptions and does not prevent the app from crashing.
- * - It chains to any previous uncaught exception handler (e.g., Crashlytics).
- *
- * Startup time tracking:
- * - Requires explicit calls to [startupTime.recordActivityOnCreate] and [startupTime.recordFirstDraw] in your MainActivity lifecycle.
- *
- * All features are modular and can be used independently.
- */
 object PerfScout {
-    val cpu = SimpleMetricDelegate(
+    val cpu: MetricDelegate<CpuInfo> = SimpleMetricDelegate(
         metricProvider({ CpuInfoProvider.getCpuInfo() }, "Failed to get CPU info"),
         scopeFor("cpu")
     )
 
-    val appMemory = SimpleMetricDelegate(
+    val appMemory: MetricDelegate<AppMemoryInfo> = SimpleMetricDelegate(
         metricProvider(
             { AppMemoryInfoProvider.getAppMemoryInfo() },
             "Failed to get app memory info"
@@ -170,12 +129,12 @@ object PerfScout {
         scopeFor("appMemory")
     )
 
-    val gcStats = SimpleMetricDelegate(
+    val gcStats: MetricDelegate<GcStatsInfo> = SimpleMetricDelegate(
         metricProvider({ GcStatsInfoProvider.getGcStatsInfo() }, "Failed to get GC stats info"),
         scopeFor("gcStats")
     )
 
-    val ram = ContextMetricDelegate(
+    val ram: MetricDelegateWithContext<Context, RamInfo> = ContextMetricDelegate(
         metricProvider(
             { ctx: Context -> RamInfoProvider.getRamInfo(ctx) },
             "Failed to get RAM info"
@@ -183,7 +142,7 @@ object PerfScout {
         scopeFor("ram")
     )
 
-    val battery = ContextMetricDelegate(
+    val battery: MetricDelegateWithContext<Context, BatteryInfo> = ContextMetricDelegate(
         metricProvider(
             { ctx: Context -> BatteryInfoProvider.getBatteryInfo(ctx) },
             "Failed to get battery info"
@@ -191,7 +150,7 @@ object PerfScout {
         scopeFor("battery")
     )
 
-    val device = ContextMetricDelegate(
+    val device: MetricDelegateWithContext<Context, DeviceInfo> = ContextMetricDelegate(
         metricProvider(
             { ctx: Context -> DeviceInfoProvider.getDeviceInfo(ctx) },
             "Failed to get device info"
@@ -199,7 +158,7 @@ object PerfScout {
         scopeFor("device")
     )
 
-    val storage = ContextMetricDelegate(
+    val storage: MetricDelegateWithContext<Context, StorageUsageInfo> = ContextMetricDelegate(
         metricProvider(
             { ctx: Context -> StorageUsageInfoProvider.getStorageUsageInfo(ctx) },
             "Failed to get storage info"
@@ -207,7 +166,7 @@ object PerfScout {
         scopeFor("storage")
     )
 
-    val network = ContextMetricDelegate(
+    val network: MetricDelegateWithContext<Context, NetworkQualityInfo> = ContextMetricDelegate(
         metricProvider(
             { ctx: Context -> NetworkQualityInfoProvider.getNetworkQualityInfo(ctx) },
             "Failed to get network info"
@@ -215,7 +174,7 @@ object PerfScout {
         scopeFor("network")
     )
 
-    val appUptime = ContextMetricDelegate(
+    val appUptime: MetricDelegateWithContext<Context, AppUptimeInfo> = ContextMetricDelegate(
         metricProvider(
             { ctx: Context -> AppUptimeInfoProvider.getAppUptimeInfo(ctx) },
             "Failed to get app uptime info"
@@ -223,15 +182,16 @@ object PerfScout {
         scopeFor("appUptime")
     )
 
-    val threadProcess = ContextMetricDelegate(
-        metricProvider(
-            { ctx: Context -> ThreadProcessInfoProvider.getThreadProcessInfo(ctx) },
-            "Failed to get thread/process info"
-        ),
-        scopeFor("threadProcess")
-    )
+    val threadProcess: MetricDelegateWithContext<Context, ThreadProcessInfo> =
+        ContextMetricDelegate(
+            metricProvider(
+                { ctx: Context -> ThreadProcessInfoProvider.getThreadProcessInfo(ctx) },
+                "Failed to get thread/process info"
+            ),
+            scopeFor("threadProcess")
+        )
 
-    val thermal = ContextMetricDelegate(
+    val thermal: MetricDelegateWithContext<Context, ThermalInfo> = ContextMetricDelegate(
         metricProvider(
             { ctx: Context -> ThermalInfoProvider.getThermalInfo(ctx) },
             "Failed to get thermal info"
@@ -239,18 +199,63 @@ object PerfScout {
         scopeFor("thermal")
     )
 
-    val gpu = SimpleMetricDelegate(
+    val gpu: MetricDelegate<GpuInfo> = SimpleMetricDelegate(
         metricProvider({ GpuInfoProvider.getGpuInfo() }, "Failed to get GPU info"),
         scopeFor("gpu")
     )
 
-    val mediaQuality = ContextMetricDelegate(
-        metricProvider(
-            { ctx: Context -> MediaQualityProvider.getMediaQualityRecommendation(ctx) },
-            "Failed to get media quality recommendation"
-        ),
+    val mediaQuality: MetricDelegateWithContext<Context, MediaQualityLevel> = ContextMetricDelegate(
+        object : MetricProvider<Context, MediaQualityLevel> {
+            override fun fetch(context: Context): MediaQualityLevel {
+                return when (val result =
+                    MediaQualityProvider.getMediaQualityRecommendation(context)) {
+                    is PerfResult.Success -> result.info
+                    is PerfResult.Error -> throw RuntimeException(result.message)
+                }
+            }
+
+            override fun errorMessage() = "Failed to get media quality recommendation"
+        },
         scopeFor("mediaQuality")
     )
+
+    val frameRendering: MetricDelegate<FrameRenderingInfo> =
+        object : MetricDelegate<FrameRenderingInfo> {
+            override fun get(): PerfResult<FrameRenderingInfo> {
+                return try {
+                    // For sync calls, we'll use a simple approach with a timeout
+                    val result = kotlinx.coroutines.runBlocking {
+                        suspendCancellableCoroutine<FrameRenderingInfo> { cont ->
+                            FrameRenderingInfoProvider.getFrameRenderingInfo(2000) { result ->
+                                if (cont.isActive) cont.resume(result, null)
+                            }
+                        }
+                    }
+                    PerfResult.Success(result)
+                } catch (e: Exception) {
+                    PerfResult.Error("Failed to get frame rendering info", e)
+                }
+            }
+
+            override suspend fun getAsync(): PerfResult<FrameRenderingInfo> {
+                return try {
+                    val result = suspendCancellableCoroutine<FrameRenderingInfo> { cont ->
+                        FrameRenderingInfoProvider.getFrameRenderingInfo(2000) { result ->
+                            if (cont.isActive) cont.resume(result, null)
+                        }
+                    }
+                    PerfResult.Success(result)
+                } catch (e: Exception) {
+                    PerfResult.Error("Failed to get frame rendering info", e)
+                }
+            }
+
+            fun getAsync(callback: (PerfResult<FrameRenderingInfo>) -> Unit) {
+                scopeFor("frameRendering").launch {
+                    callback(getAsync())
+                }
+            }
+        }
 
     val startupTime: StartupTimeDelegate = object : StartupTimeDelegate {
         override fun recordActivityOnCreate(context: Context) {

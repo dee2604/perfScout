@@ -5,9 +5,16 @@ import android.os.Build
 import com.deelib.perfScout.network.NetworkQualityInfoProvider
 import com.deelib.perfScout.core.PerfResult
 
+data class MediaQualityAnalysis(
+    val networkSpeed: String,
+    val latency: Long,
+    val packetLoss: Double,
+    val apiLevel: Int,
+    val recommendedQuality: MediaQualityLevel
+)
+
 object MediaQualityProvider {
     fun getMediaQualityRecommendation(context: Context): PerfResult<MediaQualityLevel> {
-        // Example heuristic: use network speed and device API level
         return try {
             val networkInfo = NetworkQualityInfoProvider.getNetworkQualityInfo(context)
             val apiLevel = Build.VERSION.SDK_INT
@@ -23,14 +30,27 @@ object MediaQualityProvider {
         }
     }
 
-    fun getMediaQualityAnalysis(context: Context): Map<String, Any> {
-        val networkInfo = NetworkQualityInfoProvider.getNetworkQualityInfo(context)
-        val apiLevel = Build.VERSION.SDK_INT
-        return mapOf(
-            "networkSpeed" to (networkInfo.networkSpeed as Any),
-            "latency" to (networkInfo.latency as Any),
-            "packetLoss" to (networkInfo.packetLoss as Any),
-            "apiLevel" to (apiLevel as Any)
-        )
+    fun getMediaQualityAnalysis(context: Context): PerfResult<MediaQualityAnalysis> {
+        return try {
+            val networkInfo = NetworkQualityInfoProvider.getNetworkQualityInfo(context)
+            val apiLevel = Build.VERSION.SDK_INT
+            val recommendedQuality = when {
+                apiLevel >= 30 && networkInfo.networkSpeed == "VERY_FAST" -> MediaQualityLevel.ULTRA
+                apiLevel >= 28 && networkInfo.networkSpeed == "FAST" -> MediaQualityLevel.HIGH
+                apiLevel >= 26 && networkInfo.networkSpeed == "MEDIUM" -> MediaQualityLevel.MEDIUM
+                else -> MediaQualityLevel.LOW
+            }
+
+            val analysis = MediaQualityAnalysis(
+                networkSpeed = networkInfo.networkSpeed ?: "",
+                latency = networkInfo.latency?.toLong() ?: 0L,
+                packetLoss = networkInfo.packetLoss ?: 0.0,
+                apiLevel = apiLevel,
+                recommendedQuality = recommendedQuality
+            )
+            PerfResult.Success(analysis)
+        } catch (e: Exception) {
+            PerfResult.Error("Failed to analyze media quality: ${e.message}", e)
+        }
     }
 } 
