@@ -3,7 +3,7 @@ package com.deelib.perfScout.media
 import android.content.Context
 import android.os.Build
 import com.deelib.perfScout.network.NetworkQualityInfoProvider
-import com.deelib.perfScout.core.PerfResult
+import com.deelib.perfScout.api.PerfResult
 
 data class MediaQualityAnalysis(
     val networkSpeed: String,

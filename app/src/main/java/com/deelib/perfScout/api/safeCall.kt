@@ -1,18 +1,18 @@
-package com.deelib.perfScout.core
+package com.deelib.perfScout.api
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-inline fun <T> safeCall(errorMessage: String, block: () -> T): PerfResult<T> = try {
+public inline fun <T> safeCall(errorMessage: String, block: () -> T): PerfResult<T> = try {
     PerfResult.Success(block())
 } catch (e: Exception) {
     PerfResult.Error("$errorMessage: ${e.message}", e)
 }
 
 
-inline fun <T> CoroutineScope.launchWithCallback(
+public inline fun <T> CoroutineScope.launchWithCallback(
     crossinline block: suspend () -> T,
     crossinline callback: (T) -> Unit
 ) {

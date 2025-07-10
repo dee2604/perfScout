@@ -30,11 +30,9 @@ import com.deelib.perfScout.anr.AnrInfo
 import com.deelib.perfScout.anr.AnrMonitorProvider
 import com.deelib.perfScout.battery.BatteryInfo
 import com.deelib.perfScout.battery.BatteryInfoProvider
-import com.deelib.perfScout.core.MetricDelegate
-import com.deelib.perfScout.core.MetricDelegateWithContext
-import com.deelib.perfScout.core.MetricProvider
-import com.deelib.perfScout.core.PerfResult
-import com.deelib.perfScout.core.safeCall
+import com.deelib.perfScout.api.PerfResult
+import com.deelib.perfScout.api.launchWithCallback
+import com.deelib.perfScout.api.safeCall
 import com.deelib.perfScout.cpu.CpuInfo
 import com.deelib.perfScout.cpu.CpuInfoProvider
 import com.deelib.perfScout.crash.CrashInfo
@@ -77,7 +75,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.concurrent.ConcurrentHashMap
 
 
-interface StartupTimeDelegate {
+public interface StartupTimeDelegate {
     fun recordActivityOnCreate(context: Context)
     fun recordFirstDraw(context: Context)
     suspend fun getAsync(context: Context): PerfResult<StartupTimeInfo>
@@ -85,8 +83,36 @@ interface StartupTimeDelegate {
         kotlinx.coroutines.runBlocking { getAsync(context) }
 }
 
+public interface MetricDelegate<T> {
+    fun get(): PerfResult<T>
+    suspend fun getAsync(): PerfResult<T>
+}
 
-class ContextMetricDelegate<C, R>(
+public interface MetricDelegateWithContext<C, R> {
+    fun get(context: C): PerfResult<R>
+    suspend fun getAsync(context: C): PerfResult<R>
+}
+
+public interface MetricProvider<ContextArg, InfoType> {
+    fun fetch(context: ContextArg): InfoType
+    fun errorMessage(): String
+
+    fun sync(context: ContextArg): PerfResult<InfoType> =
+        safeCall(errorMessage()) { fetch(context) }
+
+    suspend fun async(context: ContextArg): PerfResult<InfoType> =
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { sync(context) }
+
+    fun async(
+        context: ContextArg,
+        callback: (PerfResult<InfoType>) -> Unit,
+        scope: CoroutineScope
+    ) =
+        scope.launchWithCallback({ async(context) }, callback)
+}
+
+
+public class ContextMetricDelegate<C, R>(
     private val provider: MetricProvider<C, R>,
     private val scope: CoroutineScope
 ) : MetricDelegateWithContext<C, R> {
@@ -96,7 +122,7 @@ class ContextMetricDelegate<C, R>(
         provider.async(context, callback, scope)
 }
 
-class SimpleMetricDelegate<R>(
+public class SimpleMetricDelegate<R>(
     private val provider: MetricProvider<Unit, R>,
     private val scope: CoroutineScope
 ) : MetricDelegate<R> {

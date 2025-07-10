@@ -1,4 +1,4 @@
-package com.deelib.perfScout.core
+package com.deelib.perfScout.api
 
 sealed class PerfResult<T> {
     data class Success<T>(val info: T) : PerfResult<T>()
