@@ -26,13 +26,16 @@ package com.deelib.perfScout
 
 import android.content.Context
 import android.os.Build
+import androidx.annotation.WorkerThread
 import com.deelib.perfScout.anr.AnrInfo
 import com.deelib.perfScout.anr.AnrMonitorProvider
+import com.deelib.perfScout.api.MetricDelegate
+import com.deelib.perfScout.api.MetricDelegateWithContext
+import com.deelib.perfScout.api.PerfResult
+import com.deelib.perfScout.api.StartupTimeDelegate
+import com.deelib.perfScout.api.safeCall
 import com.deelib.perfScout.battery.BatteryInfo
 import com.deelib.perfScout.battery.BatteryInfoProvider
-import com.deelib.perfScout.api.PerfResult
-import com.deelib.perfScout.api.launchWithCallback
-import com.deelib.perfScout.api.safeCall
 import com.deelib.perfScout.cpu.CpuInfo
 import com.deelib.perfScout.cpu.CpuInfoProvider
 import com.deelib.perfScout.crash.CrashInfo
@@ -73,43 +76,10 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.concurrent.ConcurrentHashMap
-
-
-public interface StartupTimeDelegate {
-    fun recordActivityOnCreate(context: Context)
-    fun recordFirstDraw(context: Context)
-    suspend fun getAsync(context: Context): PerfResult<StartupTimeInfo>
-    fun get(context: Context): PerfResult<StartupTimeInfo> =
-        kotlinx.coroutines.runBlocking { getAsync(context) }
-}
-
-public interface MetricDelegate<T> {
-    fun get(): PerfResult<T>
-    suspend fun getAsync(): PerfResult<T>
-}
-
-public interface MetricDelegateWithContext<C, R> {
-    fun get(context: C): PerfResult<R>
-    suspend fun getAsync(context: C): PerfResult<R>
-}
-
-public interface MetricProvider<ContextArg, InfoType> {
-    fun fetch(context: ContextArg): InfoType
-    fun errorMessage(): String
-
-    fun sync(context: ContextArg): PerfResult<InfoType> =
-        safeCall(errorMessage()) { fetch(context) }
-
-    suspend fun async(context: ContextArg): PerfResult<InfoType> =
-        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { sync(context) }
-
-    fun async(
-        context: ContextArg,
-        callback: (PerfResult<InfoType>) -> Unit,
-        scope: CoroutineScope
-    ) =
-        scope.launchWithCallback({ async(context) }, callback)
-}
+import com.deelib.perfScout.api.MetricProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 
 
 public class ContextMetricDelegate<C, R>(
@@ -245,19 +215,23 @@ object PerfScout {
         scopeFor("mediaQuality")
     )
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val frameRendering: MetricDelegate<FrameRenderingInfo> =
         object : MetricDelegate<FrameRenderingInfo> {
+            @WorkerThread
             override fun get(): PerfResult<FrameRenderingInfo> {
                 return try {
-                    // For sync calls, we'll use a simple approach with a timeout
-                    val result = kotlinx.coroutines.runBlocking {
-                        suspendCancellableCoroutine<FrameRenderingInfo> { cont ->
-                            FrameRenderingInfoProvider.getFrameRenderingInfo(2000) { result ->
-                                if (cont.isActive) cont.resume(result, null)
+                    val result = runBlocking(Dispatchers.Default) {
+                        withTimeoutOrNull(2500) {
+                            suspendCancellableCoroutine<FrameRenderingInfo> { cont ->
+                                FrameRenderingInfoProvider.getFrameRenderingInfo(2000) { result ->
+                                    if (cont.isActive) cont.resume(result, null)
+                                }
                             }
                         }
                     }
-                    PerfResult.Success(result)
+                    if (result != null) PerfResult.Success(result)
+                    else PerfResult.Error("Timeout while getting frame rendering info")
                 } catch (e: Exception) {
                     PerfResult.Error("Failed to get frame rendering info", e)
                 }
@@ -297,8 +271,23 @@ object PerfScout {
                 StartupTimeInfoProvider.getStartupTimeInfo()
             }
         }
+
+        @WorkerThread
+        override fun get(context: Context): PerfResult<StartupTimeInfo> {
+            return try {
+                runBlocking(Dispatchers.Default) {
+                    withTimeoutOrNull(2500) {
+                        getAsync(context)
+                    } ?: PerfResult.Error("Timeout while getting startup time info")
+                }
+            } catch (e: Exception) {
+                PerfResult.Error("Failed to get startup time info", e)
+            }
+        }
     }
 
+    @JvmStatic
+    fun getStartupTime(context: Context): PerfResult<StartupTimeInfo> = startupTime.get(context)
 
     suspend fun getFrameRenderingInfoAsync(durationMillis: Long = 2000): PerfResult<FrameRenderingInfo> =
         suspendCancellableCoroutine { cont ->
