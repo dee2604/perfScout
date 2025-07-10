@@ -21,6 +21,15 @@
 
 ---
 
+## Threading Requirements ⚠️
+
+> **Important:** Some synchronous `get()` methods (such as for frame rendering and startup time) must **not** be called from the main/UI thread. Calling these methods on the main thread can cause ANR (Application Not Responding) errors. Always use them from a background thread, or prefer the suspend/async versions in coroutines or with callbacks.
+
+- Synchronous `get()` methods for metrics like `PerfScout.frameRendering.get()` and `PerfScout.startupTime.get(context)` are annotated with `@WorkerThread` and should only be called from a background thread.
+- For UI or main-thread code, always use the `getAsync()` suspend or callback-based APIs.
+
+---
+
 ## Features at a Glance
 
 - CPU, RAM, GPU, Battery, Thermal, Network, Storage, Thread/Process, App Memory, App CPU, GC, App Uptime, Device Info, Frame Rendering
@@ -122,7 +131,15 @@ val networkResult = PerfScout.network.get(context)
 val storageResult = PerfScout.storage.get(context)
 val threadResult = PerfScout.threadProcess.get(context)
 val mediaQualityResult = PerfScout.mediaQuality.get(context)
-val frameRenderingResult = PerfScout.frameRendering.get()
+
+// ⚠️ For frame rendering and startup time, prefer async usage:
+// In a coroutine scope (recommended for UI/main thread)
+val frameRenderingResult = PerfScout.frameRendering.getAsync()
+val startupResult = PerfScout.startupTime.getAsync(context)
+
+// If you must use get(), call only from a background thread:
+// val frameRenderingResult = PerfScout.frameRendering.get() // @WorkerThread only
+// val startupResult = PerfScout.startupTime.get(context)    // @WorkerThread only
 ```
 
 **Handling results:**
@@ -151,21 +168,26 @@ override fun onWindowFocusChanged(hasFocus: Boolean) {
 }
 ```
 
-Get startup time info:
+Get startup time info (async, recommended):
 ```kotlin
-val startupResult = PerfScout.startupTime.get(context)
+lifecycleScope.launch {
+    val startupResult = PerfScout.startupTime.getAsync(context)
+    // handle result
+}
 ```
 
 ---
 
 ### Frame Rendering/Jank
 
-**Using the new delegate (recommended):**
+**Using the new delegate (recommended, async):**
 ```kotlin
-val frameResult = PerfScout.frameRendering.get()
-when (frameResult) {
-    is PerfResult.Success -> Log.d("PerfScout", "Frame Info: ${frameResult.info}")
-    is PerfResult.Error -> Log.e("PerfScout", "Error: ${frameResult.message}")
+lifecycleScope.launch {
+    val frameResult = PerfScout.frameRendering.getAsync()
+    when (frameResult) {
+        is PerfResult.Success -> Log.d("PerfScout", "Frame Info: ${frameResult.info}")
+        is PerfResult.Error -> Log.e("PerfScout", "Error: ${frameResult.message}")
+    }
 }
 ```
 
@@ -198,7 +220,6 @@ PerfScout.setAnrListener { anrInfo ->
 - The crash listener will be called for **any uncaught exception** in the host app, any library, or PerfScout itself.
 - It does **not** catch exceptions that are handled by try/catch.
 - It does **not** prevent the app from crashing; the process will still terminate after your callback.
-- PerfScout will **chain to any previous uncaught exception handler** (such as Crashlytics, Sentry, or the system default), so it will not interfere with other crash reporting tools.
 
 | Scenario                        | Will PerfScout crash listener be called? |
 |----------------------------------|:---------------------------------------:|
