@@ -67,7 +67,15 @@ PerfScoutMetrics.enableStrictMode(penaltyCallback = { violation ->
 
 ### 1. Add as a dependency
 
-#### JitPack (Recommended)
+#### Maven Central (Recommended)
+```kotlin
+// build.gradle.kts
+dependencies {
+    implementation("io.github.deekshasinghal326:perfscout:1.1.4")
+}
+```
+
+#### JitPack (Alternative)
 ```kotlin
 // build.gradle.kts
 dependencies {
@@ -79,12 +87,7 @@ dependencies {
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.github.deekshasinghal326:perfScout:1.1.4")
-}
-
-// in settings.gradle
-repositories {
-    maven { url = uri("https://jitpack.io") }
+    implementation("io.github.deekshasinghal326:perfscout:1.1.4")
 }
 ```
 

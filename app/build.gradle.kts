@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     id("maven-publish")
+    id("signing")
 }
 
 android {
@@ -46,34 +47,38 @@ dependencies {
 
 }
 
-//Publishing configuration
+// Publishing configuration for Maven Central
 afterEvaluate {
     publishing {
         publications {
             create<MavenPublication>("release") {
                 from(components["release"])
 
-                groupId = "com.github.deekshasinghal326"
-                artifactId = "perfScout"
-                version = "1.0.0"
+                groupId = "io.github.deekshasinghal326"
+                artifactId = "perfscout"
+                version = "1.1.4"
 
                 pom {
                     name.set("PerfScout")
-                    description.set("Android library providing device and app performance metrics with a clean, modular API")
+                    description.set("Unified Android Performance & Usage Metrics Library - provides safe, modular, and permissionless access to all vital app and device performance metrics through a single, unified API surface.")
                     url.set("https://github.com/deekshasinghal326/perfScout")
+                    
+                    inceptionYear.set("2024")
 
                     licenses {
                         license {
                             name.set("MIT License")
                             url.set("https://opensource.org/licenses/MIT")
+                            distribution.set("repo")
                         }
                     }
 
                     developers {
                         developer {
                             id.set("deekshasinghal326")
-                            name.set("Deeksha Singhal")
+                            name.set("Deeksha Agrawal")
                             email.set("deekshasinghal3@gmail.com")
+                            url.set("https://github.com/deekshasinghal326")
                         }
                     }
 
@@ -81,9 +86,43 @@ afterEvaluate {
                         connection.set("scm:git:git://github.com/deekshasinghal326/perfScout.git")
                         developerConnection.set("scm:git:ssh://github.com/deekshasinghal326/perfScout.git")
                         url.set("https://github.com/deekshasinghal326/perfScout")
+                        tag.set("v1.1.4")
+                    }
+                    
+                    issueManagement {
+                        system.set("GitHub")
+                        url.set("https://github.com/deekshasinghal326/perfScout/issues")
+                    }
+                    
+                    ciManagement {
+                        system.set("GitHub Actions")
+                        url.set("https://github.com/deekshasinghal326/perfScout/actions")
                     }
                 }
             }
+        }
+        
+        repositories {
+            maven {
+                name = "OSSRH"
+                url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+                credentials {
+                    username = project.findProperty("ossrhUsername") as String?
+                    password = project.findProperty("ossrhPassword") as String?
+                }
+            }
+        }
+    }
+    
+    // Signing configuration for Maven Central
+    signing {
+        val signingKey = project.findProperty("signing.keyId") as String?
+        val signingPassword = project.findProperty("signing.password") as String?
+        val signingSecretKeyRingFile = project.findProperty("signing.secretKeyRingFile") as String?
+        
+        if (signingKey != null) {
+            useInMemoryPgpKeys(signingKey, signingSecretKeyRingFile, signingPassword)
+            sign(publishing.publications)
         }
     }
 }
