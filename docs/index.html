@@ -316,16 +316,22 @@
                 <div class="usage-section">
                     <h3>2. Basic Usage</h3>
                     <div class="code-block">
-<span class="comment">// Get performance metrics</span>
-<span class="keyword">val</span> cpuInfo = PerfScout.getCpuInfo()
-<span class="keyword">val</span> ramInfo = PerfScout.getRamInfo(context)
-<span class="keyword">val</span> batteryInfo = PerfScout.getBatteryInfo(context)
+<span class="comment">// Get performance metrics (new delegate-based API)</span>
+<span class="keyword">val</span> cpuResult = PerfScoutMetrics.cpu.get()
+<span class="keyword">val</span> ramResult = PerfScoutMetrics.ram.get(context)
+<span class="keyword">val</span> batteryResult = PerfScoutMetrics.battery.get(context)
+
+<span class="comment">// Handle results safely</span>
+<span class="keyword">when</span> (cpuResult) {
+    <span class="keyword">is</span> PerfResult.Success -> Log.d(<span class="string">"PerfScout"</span>, <span class="string">"CPU: ${cpuResult.info}"</span>)
+    <span class="keyword">is</span> PerfResult.Error -> Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Error: ${cpuResult.message}"</span>)
+}
 
 <span class="comment">// Monitor crashes and ANRs</span>
-PerfScout.setCrashListener { crashInfo ->
+PerfScoutMetrics.setCrashListener { crashInfo ->
     Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Crash detected: $crashInfo"</span>)
 }
-PerfScout.setAnrListener { anrInfo ->
+PerfScoutMetrics.setAnrListener { anrInfo ->
     Log.w(<span class="string">"PerfScout"</span>, <span class="string">"ANR detected: $anrInfo"</span>)
 }
                     </div>
@@ -334,15 +340,47 @@ PerfScout.setAnrListener { anrInfo ->
                 <div class="usage-section">
                     <h3>3. Advanced Features</h3>
                     <div class="code-block">
-<span class="comment">// Frame rendering analysis</span>
-PerfScout.getFrameRenderingInfo(<span class="highlight">3000</span>) { frameInfo ->
-    println(<span class="string">"Performance Score: ${frameInfo.performanceScore}"</span>)
-    println(<span class="string">"Jank Percentage: ${frameInfo.jankPercentage}%"</span>)
+<span class="comment">// Frame rendering analysis (async recommended)</span>
+lifecycleScope.launch {
+    <span class="keyword">val</span> frameResult = PerfScoutMetrics.frameRendering.getAsync()
+    <span class="keyword">when</span> (frameResult) {
+        <span class="keyword">is</span> PerfResult.Success -> {
+            println(<span class="string">"Performance Score: ${frameResult.info.performanceScore}"</span>)
+            println(<span class="string">"Jank Percentage: ${frameResult.info.jankPercentage}%"</span>)
+        }
+        <span class="keyword">is</span> PerfResult.Error -> Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Error: ${frameResult.message}"</span>)
+    }
 }
 
-<span class="comment">// Memory leak monitoring</span>
-PerfScout.monitorMemoryLeaks(context) { isLeaking, usageHistory ->
-    <span class="keyword">if</span> (isLeaking) Log.w(<span class="string">"PerfScout"</span>, <span class="string">"Possible memory leak: $usageHistory"</span>)
+<span class="comment">// Media quality analysis</span>
+<span class="keyword">val</span> analysisResult = PerfScoutMetrics.mediaQualityAnalysis.get(context)
+<span class="keyword">when</span> (analysisResult) {
+    <span class="keyword">is</span> PerfResult.Success -> {
+        println(<span class="string">"Network Speed: ${analysisResult.info.networkSpeed}"</span>)
+        println(<span class="string">"Recommended Quality: ${analysisResult.info.recommendedQuality}"</span>)
+    }
+    <span class="keyword">is</span> PerfResult.Error -> Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Error: ${analysisResult.message}"</span>)
+}
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>⚠️ Threading Requirements</h2>
+                <div class="usage-section">
+                    <h3>Important Notes</h3>
+                    <div class="code-block">
+<span class="comment">// Some synchronous get() methods must NOT be called from main thread</span>
+<span class="comment">// Use async versions for UI/main thread code:</span>
+
+<span class="comment">// ❌ Don't do this on main thread:</span>
+<span class="comment">// val frameResult = PerfScoutMetrics.frameRendering.get()</span>
+<span class="comment">// val startupResult = PerfScoutMetrics.startupTime.get(context)</span>
+
+<span class="comment">// ✅ Do this instead:</span>
+lifecycleScope.launch {
+    <span class="keyword">val</span> frameResult = PerfScoutMetrics.frameRendering.getAsync()
+    <span class="keyword">val</span> startupResult = PerfScoutMetrics.startupTime.getAsync(context)
 }
                     </div>
                 </div>
@@ -376,7 +414,7 @@ PerfScout.monitorMemoryLeaks(context) { isLeaking, usageHistory ->
         <div class="container">
             <div class="footer-content">
                 <div>
-                    <p>&copy; 2024 PerfScout. Made with ❤️ by <a href="https://github.com/deekshasinghal326" style="color: #667eea;">Deeksha Singhal</a></p>
+                    <p>&copy; 2024 PerfScout. Made with ❤️ by <a href="https://github.com/deekshasinghal326" style="color: #667eea;">Deeksha Agrawal</a></p>
                 </div>
                 <div class="social-links">
                     <a href="https://github.com/deekshasinghal326/perfScout">🐙 GitHub</a>

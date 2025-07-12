@@ -139,42 +139,108 @@
             <h2>Core Performance Metrics</h2>
             
             <div class="method">
-                <h3>getCpuInfo()</h3>
-                <p>Retrieves current CPU usage and information.</p>
+                <h3>cpu.get() / cpu.getAsync()</h3>
+                <p>Retrieves current CPU usage and information using the new delegate-based API.</p>
                 <div class="return-type">
-                    <strong>Returns:</strong> CpuInfo object containing CPU usage percentage and core information
+                    <strong>Returns:</strong> PerfResult&lt;CpuInfo&gt; containing CPU usage percentage and core information
                 </div>
                 <div class="example">
                     <h4>Example:</h4>
                     <div class="code-block">
-<span class="keyword">val</span> cpuInfo = PerfScout.getCpuInfo()
-println(<span class="string">"CPU Usage: ${cpuInfo.usagePercent}%"</span>)
-println(<span class="string">"Cores: ${cpuInfo.coreCount}"</span>)
+<span class="comment">// Synchronous (call from background thread)</span>
+<span class="keyword">val</span> cpuResult = PerfScoutMetrics.cpu.get()
+<span class="keyword">when</span> (cpuResult) {
+    <span class="keyword">is</span> PerfResult.Success -> {
+        println(<span class="string">"CPU Usage: ${cpuResult.info.usagePercent}%"</span>)
+        println(<span class="string">"Cores: ${cpuResult.info.coreCount}"</span>)
+    }
+    <span class="keyword">is</span> PerfResult.Error -> Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Error: ${cpuResult.message}"</span>)
+}
+
+<span class="comment">// Asynchronous (safe for main thread)</span>
+lifecycleScope.launch {
+    <span class="keyword">val</span> cpuResult = PerfScoutMetrics.cpu.getAsync()
+    <span class="comment">// Handle result...</span>
+}
                     </div>
                 </div>
             </div>
 
             <div class="method">
-                <h3>getRamInfo(context: Context)</h3>
-                <p>Retrieves RAM usage and memory information.</p>
+                <h3>ram.get(context) / ram.getAsync(context)</h3>
+                <p>Retrieves RAM usage and memory information using the new delegate-based API.</p>
                 <div class="return-type">
-                    <strong>Returns:</strong> RamInfo object containing total, available, and used memory
+                    <strong>Returns:</strong> PerfResult&lt;RamInfo&gt; containing total, available, and used memory
                 </div>
                 <div class="example">
                     <h4>Example:</h4>
                     <div class="code-block">
-<span class="keyword">val</span> ramInfo = PerfScout.getRamInfo(context)
-println(<span class="string">"Total RAM: ${ramInfo.totalMemory} MB"</span>)
-println(<span class="string">"Available: ${ramInfo.availableMemory} MB"</span>)
+<span class="comment">// Synchronous (call from background thread)</span>
+<span class="keyword">val</span> ramResult = PerfScoutMetrics.ram.get(context)
+<span class="keyword">when</span> (ramResult) {
+    <span class="keyword">is</span> PerfResult.Success -> {
+        println(<span class="string">"Total RAM: ${ramResult.info.totalMemory} MB"</span>)
+        println(<span class="string">"Available: ${ramResult.info.availableMemory} MB"</span>)
+    }
+    <span class="keyword">is</span> PerfResult.Error -> Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Error: ${ramResult.message}"</span>)
+}
+
+<span class="comment">// Asynchronous (safe for main thread)</span>
+lifecycleScope.launch {
+    <span class="keyword">val</span> ramResult = PerfScoutMetrics.ram.getAsync(context)
+    <span class="comment">// Handle result...</span>
+}
                     </div>
                 </div>
             </div>
 
             <div class="method">
-                <h3>getBatteryInfo(context: Context)</h3>
-                <p>Retrieves battery status and health information.</p>
+                <h3>battery.get(context) / battery.getAsync(context)</h3>
+                <p>Retrieves battery status and health information using the new delegate-based API.</p>
                 <div class="return-type">
-                    <strong>Returns:</strong> BatteryInfo object containing level, health, and charging status
+                    <strong>Returns:</strong> PerfResult&lt;BatteryInfo&gt; containing level, health, and charging status
+                </div>
+                <div class="example">
+                    <h4>Example:</h4>
+                    <div class="code-block">
+<span class="keyword">val</span> batteryResult = PerfScoutMetrics.battery.get(context)
+<span class="keyword">when</span> (batteryResult) {
+    <span class="keyword">is</span> PerfResult.Success -> {
+        println(<span class="string">"Battery Level: ${batteryResult.info.level}%"</span>)
+        println(<span class="string">"Charging: ${batteryResult.info.isCharging}"</span>)
+    }
+    <span class="keyword">is</span> PerfResult.Error -> Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Error: ${batteryResult.message}"</span>)
+}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>Media Quality Analysis</h2>
+            
+            <div class="method">
+                <h3>mediaQualityAnalysis.get(context) / mediaQualityAnalysis.getAsync(context)</h3>
+                <p>Provides detailed media quality analysis including network metrics and recommended quality levels.</p>
+                <div class="return-type">
+                    <strong>Returns:</strong> PerfResult&lt;MediaQualityAnalysis&gt; containing network speed, latency, packet loss, and recommended quality
+                </div>
+                <div class="example">
+                    <h4>Example:</h4>
+                    <div class="code-block">
+<span class="keyword">val</span> analysisResult = PerfScoutMetrics.mediaQualityAnalysis.get(context)
+<span class="keyword">when</span> (analysisResult) {
+    <span class="keyword">is</span> PerfResult.Success -> {
+        <span class="keyword">val</span> analysis = analysisResult.info
+        println(<span class="string">"Network Speed: ${analysis.networkSpeed}"</span>)
+        println(<span class="string">"Latency: ${analysis.latency}ms"</span>)
+        println(<span class="string">"Packet Loss: ${analysis.packetLoss}%"</span>)
+        println(<span class="string">"API Level: ${analysis.apiLevel}"</span>)
+        println(<span class="string">"Recommended Quality: ${analysis.recommendedQuality}"</span>)
+    }
+    <span class="keyword">is</span> PerfResult.Error -> Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Error: ${analysisResult.message}"</span>)
+}
+                    </div>
                 </div>
             </div>
         </div>
@@ -188,7 +254,7 @@ println(<span class="string">"Available: ${ramInfo.availableMemory} MB"</span>)
                 <div class="example">
                     <h4>Example:</h4>
                     <div class="code-block">
-PerfScout.setCrashListener { crashInfo ->
+PerfScoutMetrics.setCrashListener { crashInfo ->
     Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Crash detected: ${crashInfo.message}"</span>)
     <span class="comment">// Send to crash reporting service</span>
     Crashlytics.logException(crashInfo.throwable)
@@ -203,7 +269,7 @@ PerfScout.setCrashListener { crashInfo ->
                 <div class="example">
                     <h4>Example:</h4>
                     <div class="code-block">
-PerfScout.setAnrListener { anrInfo ->
+PerfScoutMetrics.setAnrListener { anrInfo ->
     Log.w(<span class="string">"PerfScout"</span>, <span class="string">"ANR detected: ${anrInfo.duration}ms"</span>)
 }
                     </div>
@@ -242,7 +308,7 @@ PerfScout.setAnrListener { anrInfo ->
                 <div class="example">
                     <h4>Example:</h4>
                     <div class="code-block">
-PerfScout.monitorMemoryLeaks(context) { isLeaking, usageHistory ->
+PerfScoutMetrics.monitorMemoryLeaks(context) { isLeaking, usageHistory ->
     <span class="keyword">if</span> (isLeaking) {
         Log.w(<span class="string">"PerfScout"</span>, <span class="string">"Possible memory leak detected"</span>)
         <span class="comment">// Analyze usage history for patterns</span>
@@ -268,7 +334,7 @@ PerfScout.monitorMemoryLeaks(context) { isLeaking, usageHistory ->
 <span class="keyword">class</span> MainActivity : AppCompatActivity() {
     <span class="keyword">override fun</span> onCreate(savedInstanceState: Bundle?) {
         <span class="keyword">super</span>.onCreate(savedInstanceState)
-        PerfScout.recordActivityOnCreate(<span class="keyword">this</span>)
+        PerfScoutMetrics.recordActivityOnCreate(<span class="keyword">this</span>)
         <span class="comment">// ... rest of onCreate</span>
     }
 }
