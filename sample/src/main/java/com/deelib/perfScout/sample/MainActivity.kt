@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        PerfScout.startupTime.recordActivityOnCreate(this)
+        PerfScoutMetrics.startupTime.recordActivityOnCreate(this)
         enableEdgeToEdge()
         setContent {
             PerfScoutTheme {
@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            PerfScout.startupTime.recordFirstDraw(this)
+            PerfScoutMetrics.startupTime.recordFirstDraw(this)
         }
     }
 }
@@ -65,70 +65,70 @@ fun PerfScoutDashboard() {
 
         MetricFeature("CPU Info") {
             scope.launch {
-                it.value = formatResult(PerfScout.cpu.getAsync())
+                it.value = formatResult(PerfScoutMetrics.cpu.getAsync())
             }
         }
 
         MetricFeature("RAM Info") {
-            it.value = formatResult(PerfScout.ram.get(context))
+            it.value = formatResult(PerfScoutMetrics.ram.get(context))
         }
 
         MetricFeature("Thermal Info") {
-            it.value = formatResult(PerfScout.thermal.get(context))
+            it.value = formatResult(PerfScoutMetrics.thermal.get(context))
         }
 
         MetricFeature("Battery Info") {
-            it.value = formatResult(PerfScout.battery.get(context))
+            it.value = formatResult(PerfScoutMetrics.battery.get(context))
         }
 
         MetricFeature("Device Info") {
-            it.value = formatResult(PerfScout.device.get(context))
+            it.value = formatResult(PerfScoutMetrics.device.get(context))
         }
 
         SectionHeader("App Performance")
 
         MetricFeature("App Memory Info") {
-            it.value = formatResult(PerfScout.appMemory.get())
+            it.value = formatResult(PerfScoutMetrics.appMemory.get())
         }
 
         MetricFeature("App Uptime Info") {
-            it.value = formatResult(PerfScout.appUptime.get(context))
+            it.value = formatResult(PerfScoutMetrics.appUptime.get(context))
         }
 
         MetricFeature("GC Stats Info") {
-            it.value = formatResult(PerfScout.gcStats.get())
+            it.value = formatResult(PerfScoutMetrics.gcStats.get())
         }
 
         MetricFeature("Frame Rendering Info(3s)") {
             scope.launch {
-                it.value = formatResult(PerfScout.getFrameRenderingInfoAsync(3000))
+                it.value = formatResult(PerfScoutMetrics.getFrameRenderingInfoAsync(3000))
             }
         }
 
         SectionHeader("Network")
 
         MetricFeature("Network Usage Info") {
-            it.value = formatResult(PerfScout.network.get(context))
+            it.value = formatResult(PerfScoutMetrics.network.get(context))
         }
 
         SectionHeader("System Info")
 
         MetricFeature("Storage Usage Info") {
-            it.value = formatResult(PerfScout.storage.get(context))
+            it.value = formatResult(PerfScoutMetrics.storage.get(context))
         }
 
         MetricFeature("Thread/Process Info") {
-            it.value = formatResult(PerfScout.threadProcess.get(context))
+            it.value = formatResult(PerfScoutMetrics.threadProcess.get(context))
         }
 
         SectionHeader("Advanced Features")
 
         MetricFeature("Startup Time Info") {
-            it.value = formatResult(PerfScout.startupTime.get(context))
+            it.value = formatResult(PerfScoutMetrics.startupTime.get(context))
         }
 
         MetricFeature("Media Quality Recommendation") {
-            it.value = formatResult(PerfScout.mediaQuality.get(context))
+            it.value = formatResult(PerfScoutMetrics.mediaQuality.get(context))
         }
 
         // Showcase Crash and ANR

@@ -52,6 +52,7 @@ import com.deelib.perfScout.jank.JankInfo
 import com.deelib.perfScout.jank.JankMonitorProvider
 import com.deelib.perfScout.media.MediaQualityLevel
 import com.deelib.perfScout.media.MediaQualityProvider
+import com.deelib.perfScout.media.MediaQualityAnalysis
 import com.deelib.perfScout.memory.AppMemoryInfo
 import com.deelib.perfScout.memory.AppMemoryInfoProvider
 import com.deelib.perfScout.network.NetworkQualityInfo
@@ -111,7 +112,7 @@ private val metricScopes = ConcurrentHashMap<String, CoroutineScope>()
 private fun scopeFor(name: String): CoroutineScope =
     metricScopes.getOrPut(name) { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
 
-object PerfScout {
+object PerfScoutMetrics {
     val cpu: MetricDelegate<CpuInfo> = SimpleMetricDelegate(
         metricProvider({ CpuInfoProvider.getCpuInfo() }, "Failed to get CPU info"),
         scopeFor("cpu")
@@ -213,6 +214,21 @@ object PerfScout {
             override fun errorMessage() = "Failed to get media quality recommendation"
         },
         scopeFor("mediaQuality")
+    )
+
+    val mediaQualityAnalysis: MetricDelegateWithContext<Context, MediaQualityAnalysis> = ContextMetricDelegate(
+        object : MetricProvider<Context, MediaQualityAnalysis> {
+            override fun fetch(context: Context): MediaQualityAnalysis {
+                return when (val result =
+                    MediaQualityProvider.getMediaQualityAnalysis(context)) {
+                    is PerfResult.Success -> result.info
+                    is PerfResult.Error -> throw RuntimeException(result.message)
+                }
+            }
+
+            override fun errorMessage() = "Failed to get media quality analysis"
+        },
+        scopeFor("mediaQualityAnalysis")
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)

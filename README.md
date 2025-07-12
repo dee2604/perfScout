@@ -25,7 +25,7 @@
 
 > **Important:** Some synchronous `get()` methods (such as for frame rendering and startup time) must **not** be called from the main/UI thread. Calling these methods on the main thread can cause ANR (Application Not Responding) errors. Always use them from a background thread, or prefer the suspend/async versions in coroutines or with callbacks.
 
-- Synchronous `get()` methods for metrics like `PerfScout.frameRendering.get()` and `PerfScout.startupTime.get(context)` are annotated with `@WorkerThread` and should only be called from a background thread.
+- Synchronous `get()` methods for metrics like `PerfScoutMetrics.frameRendering.get()` and `PerfScoutMetrics.startupTime.get(context)` are annotated with `@WorkerThread` and should only be called from a background thread.
 - For UI or main-thread code, always use the `getAsync()` suspend or callback-based APIs.
 
 ---
@@ -47,16 +47,16 @@
 
 ```kotlin
 // Add to your Application or MainActivity
-PerfScout.setCrashListener { crashInfo ->
+PerfScoutMetrics.setCrashListener { crashInfo ->
     Log.e("PerfScout", "Crash detected: $crashInfo")
 }
-PerfScout.setAnrListener { anrInfo ->
+PerfScoutMetrics.setAnrListener { anrInfo ->
     Log.w("PerfScout", "ANR detected: $anrInfo")
 }
-PerfScout.setJankListener { jankInfo ->
+PerfScoutMetrics.setJankListener { jankInfo ->
     Log.w("PerfScout", "Jank detected: $jankInfo")
 }
-PerfScout.enableStrictMode(penaltyCallback = { violation ->
+PerfScoutMetrics.enableStrictMode(penaltyCallback = { violation ->
     Log.w("PerfScout", "StrictMode violation: $violation")
 })
 ```
@@ -98,13 +98,13 @@ For accurate startup time measurements, add these calls to your MainActivity:
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        PerfScout.startupTime.recordActivityOnCreate(this)
+        PerfScoutMetrics.startupTime.recordActivityOnCreate(this)
         // ... rest of onCreate
     }
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            PerfScout.startupTime.recordFirstDraw(this)
+            PerfScoutMetrics.startupTime.recordFirstDraw(this)
         }
     }
 }
@@ -119,27 +119,28 @@ class MainActivity : AppCompatActivity() {
 ### Basic Metrics
 ```kotlin
 // All metrics return PerfResult<T> (Success or Error)
-val cpuResult = PerfScout.cpu.get() // or getAsync()
-val ramResult = PerfScout.ram.get(context)
-val gpuResult = PerfScout.gpu.get()
-val batteryResult = PerfScout.battery.get(context)
-val thermalResult = PerfScout.thermal.get(context)
-val appMemoryResult = PerfScout.appMemory.get()
-val appUptimeResult = PerfScout.appUptime.get(context)
-val gcStatsResult = PerfScout.gcStats.get()
-val networkResult = PerfScout.network.get(context)
-val storageResult = PerfScout.storage.get(context)
-val threadResult = PerfScout.threadProcess.get(context)
-val mediaQualityResult = PerfScout.mediaQuality.get(context)
+val cpuResult = PerfScoutMetrics.cpu.get() // or getAsync()
+val ramResult = PerfScoutMetrics.ram.get(context)
+val gpuResult = PerfScoutMetrics.gpu.get()
+val batteryResult = PerfScoutMetrics.battery.get(context)
+val thermalResult = PerfScoutMetrics.thermal.get(context)
+val appMemoryResult = PerfScoutMetrics.appMemory.get()
+val appUptimeResult = PerfScoutMetrics.appUptime.get(context)
+val gcStatsResult = PerfScoutMetrics.gcStats.get()
+val networkResult = PerfScoutMetrics.network.get(context)
+val storageResult = PerfScoutMetrics.storage.get(context)
+val threadResult = PerfScoutMetrics.threadProcess.get(context)
+val mediaQualityResult = PerfScoutMetrics.mediaQuality.get(context)
+val mediaQualityAnalysisResult = PerfScoutMetrics.mediaQualityAnalysis.get(context)
 
 // ⚠️ For frame rendering and startup time, prefer async usage:
 // In a coroutine scope (recommended for UI/main thread)
-val frameRenderingResult = PerfScout.frameRendering.getAsync()
-val startupResult = PerfScout.startupTime.getAsync(context)
+val frameRenderingResult = PerfScoutMetrics.frameRendering.getAsync()
+val startupResult = PerfScoutMetrics.startupTime.getAsync(context)
 
 // If you must use get(), call only from a background thread:
-// val frameRenderingResult = PerfScout.frameRendering.get() // @WorkerThread only
-// val startupResult = PerfScout.startupTime.get(context)    // @WorkerThread only
+// val frameRenderingResult = PerfScoutMetrics.frameRendering.get() // @WorkerThread only
+// val startupResult = PerfScoutMetrics.startupTime.get(context)    // @WorkerThread only
 ```
 
 **Handling results:**
@@ -157,13 +158,13 @@ Add these calls to your `MainActivity`:
 ```kotlin
 override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    PerfScout.startupTime.recordActivityOnCreate(this)
+    PerfScoutMetrics.startupTime.recordActivityOnCreate(this)
     // ...
 }
 override fun onWindowFocusChanged(hasFocus: Boolean) {
     super.onWindowFocusChanged(hasFocus)
     if (hasFocus) {
-        PerfScout.startupTime.recordFirstDraw(this)
+        PerfScoutMetrics.startupTime.recordFirstDraw(this)
     }
 }
 ```
@@ -171,7 +172,7 @@ override fun onWindowFocusChanged(hasFocus: Boolean) {
 Get startup time info (async, recommended):
 ```kotlin
 lifecycleScope.launch {
-    val startupResult = PerfScout.startupTime.getAsync(context)
+    val startupResult = PerfScoutMetrics.startupTime.getAsync(context)
     // handle result
 }
 ```
@@ -183,7 +184,7 @@ lifecycleScope.launch {
 **Using the new delegate (recommended, async):**
 ```kotlin
 lifecycleScope.launch {
-    val frameResult = PerfScout.frameRendering.getAsync()
+    val frameResult = PerfScoutMetrics.frameRendering.getAsync()
     when (frameResult) {
         is PerfResult.Success -> Log.d("PerfScout", "Frame Info: ${frameResult.info}")
         is PerfResult.Error -> Log.e("PerfScout", "Error: ${frameResult.message}")
@@ -194,7 +195,7 @@ lifecycleScope.launch {
 **Using the legacy async method:**
 ```kotlin
 lifecycleScope.launch {
-    val frameResult = PerfScout.getFrameRenderingInfoAsync(3000)
+    val frameResult = PerfScoutMetrics.getFrameRenderingInfoAsync(3000)
     when (frameResult) {
         is PerfResult.Success -> Log.d("PerfScout", "Frame Info: ${frameResult.info}")
         is PerfResult.Error -> Log.e("PerfScout", "Error: ${frameResult.message}")
@@ -208,10 +209,10 @@ lifecycleScope.launch {
 
 **Set up listeners:**
 ```kotlin
-PerfScout.setCrashListener { crashInfo ->
+PerfScoutMetrics.setCrashListener { crashInfo ->
     Log.e("PerfScout", "Crash detected: $crashInfo")
 }
-PerfScout.setAnrListener { anrInfo ->
+PerfScoutMetrics.setAnrListener { anrInfo ->
     Log.w("PerfScout", "ANR detected: $anrInfo")
 }
 ```

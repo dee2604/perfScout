@@ -108,7 +108,7 @@ internal object FrameRenderingInfoProvider {
                 }
             }, durationMillis)
         } catch (e: Exception) {
-            // Provide fallback data if monitoring fails to start
+            // you can provide fallback data if monitoring fails to start
             callback(FrameRenderingInfo(
                 totalFrames = 0,
                 droppedFrames = 0,
