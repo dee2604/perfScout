@@ -1,1 +1,4 @@
 /build
+private-key.asc
+private-key-base64.txt
+public-key.asc
