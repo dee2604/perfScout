@@ -107,8 +107,8 @@ afterEvaluate {
                 name = "OSSRH"
                 url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
                 credentials {
-                    username = project.findProperty("ossrhUsername") as String?
-                    password = project.findProperty("ossrhPassword") as String?
+                    username = System.getenv("OSSRH_USERNAME") ?: ""
+                    password = System.getenv("OSSRH_PASSWORD") ?: ""
                 }
             }
         }
@@ -116,12 +116,12 @@ afterEvaluate {
     
     // Signing configuration for Maven Central
     signing {
-        val signingKey = project.findProperty("signing.keyId") as String?
-        val signingPassword = project.findProperty("signing.password") as String?
-        val signingSecretKeyRingFile = project.findProperty("signing.secretKeyRingFile") as String?
-        
-        if (signingKey != null) {
-            useInMemoryPgpKeys(signingKey, signingSecretKeyRingFile, signingPassword)
+        val signingKey = System.getenv("SIGNING_KEY_ID")
+        val signingPassword = System.getenv("GPG_PASSPHRASE")
+        val signingPrivateKey = System.getenv("GPG_PRIVATE_KEY")
+
+        if (!signingKey.isNullOrBlank() && !signingPrivateKey.isNullOrBlank() && !signingPassword.isNullOrBlank()) {
+            useInMemoryPgpKeys(signingKey, signingPrivateKey, signingPassword)
             sign(publishing.publications)
         }
     }
