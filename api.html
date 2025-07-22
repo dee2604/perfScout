@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation - PerfScout</title>
+    <meta name="description" content="Complete API documentation for PerfScout Android performance monitoring library">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 0;
+        }
+        
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 30px;
+        }
+        
+        .nav a:hover {
+            text-decoration: underline;
+        }
+        
+        .api-section {
+            background: white;
+            margin: 30px 0;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .method {
+            border-left: 4px solid #667eea;
+            padding-left: 20px;
+            margin: 20px 0;
+        }
+        
+        .method h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+        
+        .highlight { color: #f56565; }
+        .comment { color: #718096; }
+        .string { color: #68d391; }
+        .keyword { color: #90cdf4; }
+        
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .param-table th,
+        .param-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .param-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .return-type {
+            background: #e6fffa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .example {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .example h4 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="nav">
+                <h1>PerfScout API</h1>
+                <nav>
+                    <a href="index.html">Home</a>
+                    <a href="https://github.com/deekshasinghal326/perfScout">GitHub</a>
+                    <a href="https://jitpack.io/#deekshasinghal326/perfScout">JitPack</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="api-section">
+            <h2>Core Performance Metrics</h2>
+            
+            <div class="method">
+                <h3>cpu.get() / cpu.getAsync()</h3>
+                <p>Retrieves current CPU usage and information using the new delegate-based API.</p>
+                <div class="return-type">
+                    <strong>Returns:</strong> PerfResult&lt;CpuInfo&gt; containing CPU usage percentage and core information
+                </div>
+                <div class="example">
+                    <h4>Example:</h4>
+                    <div class="code-block">
+<span class="comment">// Synchronous (call from background thread)</span>
+<span class="keyword">val</span> cpuResult = PerfScoutMetrics.cpu.get()
+<span class="keyword">when</span> (cpuResult) {
+    <span class="keyword">is</span> PerfResult.Success -> {
+        println(<span class="string">"CPU Usage: ${cpuResult.info.usagePercent}%"</span>)
+        println(<span class="string">"Cores: ${cpuResult.info.coreCount}"</span>)
+    }
+    <span class="keyword">is</span> PerfResult.Error -> Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Error: ${cpuResult.message}"</span>)
+}
+
+<span class="comment">// Asynchronous (safe for main thread)</span>
+lifecycleScope.launch {
+    <span class="keyword">val</span> cpuResult = PerfScoutMetrics.cpu.getAsync()
+    <span class="comment">// Handle result...</span>
+}
+                    </div>
+                </div>
+            </div>
+
+            <div class="method">
+                <h3>ram.get(context) / ram.getAsync(context)</h3>
+                <p>Retrieves RAM usage and memory information using the new delegate-based API.</p>
+                <div class="return-type">
+                    <strong>Returns:</strong> PerfResult&lt;RamInfo&gt; containing total, available, and used memory
+                </div>
+                <div class="example">
+                    <h4>Example:</h4>
+                    <div class="code-block">
+<span class="comment">// Synchronous (call from background thread)</span>
+<span class="keyword">val</span> ramResult = PerfScoutMetrics.ram.get(context)
+<span class="keyword">when</span> (ramResult) {
+    <span class="keyword">is</span> PerfResult.Success -> {
+        println(<span class="string">"Total RAM: ${ramResult.info.totalMemory} MB"</span>)
+        println(<span class="string">"Available: ${ramResult.info.availableMemory} MB"</span>)
+    }
+    <span class="keyword">is</span> PerfResult.Error -> Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Error: ${ramResult.message}"</span>)
+}
+
+<span class="comment">// Asynchronous (safe for main thread)</span>
+lifecycleScope.launch {
+    <span class="keyword">val</span> ramResult = PerfScoutMetrics.ram.getAsync(context)
+    <span class="comment">// Handle result...</span>
+}
+                    </div>
+                </div>
+            </div>
+
+            <div class="method">
+                <h3>battery.get(context) / battery.getAsync(context)</h3>
+                <p>Retrieves battery status and health information using the new delegate-based API.</p>
+                <div class="return-type">
+                    <strong>Returns:</strong> PerfResult&lt;BatteryInfo&gt; containing level, health, and charging status
+                </div>
+                <div class="example">
+                    <h4>Example:</h4>
+                    <div class="code-block">
+<span class="keyword">val</span> batteryResult = PerfScoutMetrics.battery.get(context)
+<span class="keyword">when</span> (batteryResult) {
+    <span class="keyword">is</span> PerfResult.Success -> {
+        println(<span class="string">"Battery Level: ${batteryResult.info.level}%"</span>)
+        println(<span class="string">"Charging: ${batteryResult.info.isCharging}"</span>)
+    }
+    <span class="keyword">is</span> PerfResult.Error -> Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Error: ${batteryResult.message}"</span>)
+}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>Media Quality Analysis</h2>
+            
+            <div class="method">
+                <h3>mediaQualityAnalysis.get(context) / mediaQualityAnalysis.getAsync(context)</h3>
+                <p>Provides detailed media quality analysis including network metrics and recommended quality levels.</p>
+                <div class="return-type">
+                    <strong>Returns:</strong> PerfResult&lt;MediaQualityAnalysis&gt; containing network speed, latency, packet loss, and recommended quality
+                </div>
+                <div class="example">
+                    <h4>Example:</h4>
+                    <div class="code-block">
+<span class="keyword">val</span> analysisResult = PerfScoutMetrics.mediaQualityAnalysis.get(context)
+<span class="keyword">when</span> (analysisResult) {
+    <span class="keyword">is</span> PerfResult.Success -> {
+        <span class="keyword">val</span> analysis = analysisResult.info
+        println(<span class="string">"Network Speed: ${analysis.networkSpeed}"</span>)
+        println(<span class="string">"Latency: ${analysis.latency}ms"</span>)
+        println(<span class="string">"Packet Loss: ${analysis.packetLoss}%"</span>)
+        println(<span class="string">"API Level: ${analysis.apiLevel}"</span>)
+        println(<span class="string">"Recommended Quality: ${analysis.recommendedQuality}"</span>)
+    }
+    <span class="keyword">is</span> PerfResult.Error -> Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Error: ${analysisResult.message}"</span>)
+}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>Advanced Monitoring</h2>
+            
+            <div class="method">
+                <h3>setCrashListener(listener: (CrashInfo) -> Unit)</h3>
+                <p>Sets up crash monitoring with callback notifications.</p>
+                <div class="example">
+                    <h4>Example:</h4>
+                    <div class="code-block">
+PerfScoutMetrics.setCrashListener { crashInfo ->
+    Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Crash detected: ${crashInfo.message}"</span>)
+    <span class="comment">// Send to crash reporting service</span>
+    Crashlytics.logException(crashInfo.throwable)
+}
+                    </div>
+                </div>
+            </div>
+
+            <div class="method">
+                <h3>setAnrListener(listener: (AnrInfo) -> Unit)</h3>
+                <p>Sets up ANR (Application Not Responding) monitoring.</p>
+                <div class="example">
+                    <h4>Example:</h4>
+                    <div class="code-block">
+PerfScoutMetrics.setAnrListener { anrInfo ->
+    Log.w(<span class="string">"PerfScout"</span>, <span class="string">"ANR detected: ${anrInfo.duration}ms"</span>)
+}
+                    </div>
+                </div>
+            </div>
+
+            <div class="method">
+                <h3>getFrameRenderingInfo(duration: Long, callback: (FrameRenderingInfo) -> Unit)</h3>
+                <p>Analyzes frame rendering performance over a specified duration.</p>
+                <table class="param-table">
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>duration</td>
+                        <td>Long</td>
+                        <td>Duration in milliseconds to analyze</td>
+                    </tr>
+                    <tr>
+                        <td>callback</td>
+                        <td>(FrameRenderingInfo) -> Unit</td>
+                        <td>Callback with analysis results</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>Memory Management</h2>
+            
+            <div class="method">
+                <h3>monitorMemoryLeaks(context: Context, callback: (Boolean, List<MemoryUsage>) -> Unit)</h3>
+                <p>Monitors for potential memory leaks using heuristic analysis.</p>
+                <div class="example">
+                    <h4>Example:</h4>
+                    <div class="code-block">
+PerfScoutMetrics.monitorMemoryLeaks(context) { isLeaking, usageHistory ->
+    <span class="keyword">if</span> (isLeaking) {
+        Log.w(<span class="string">"PerfScout"</span>, <span class="string">"Possible memory leak detected"</span>)
+        <span class="comment">// Analyze usage history for patterns</span>
+        usageHistory.forEach { usage ->
+            println(<span class="string">"Memory at ${usage.timestamp}: ${usage.usedMemory} MB"</span>)
+        }
+    }
+}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>Startup Time Tracking</h2>
+            
+            <div class="method">
+                <h3>recordActivityOnCreate(activity: Activity)</h3>
+                <p>Records the start time of activity creation for startup tracking.</p>
+                <div class="example">
+                    <h4>Example:</h4>
+                    <div class="code-block">
+<span class="keyword">class</span> MainActivity : AppCompatActivity() {
+    <span class="keyword">override fun</span> onCreate(savedInstanceState: Bundle?) {
+        <span class="keyword">super</span>.onCreate(savedInstanceState)
+        PerfScoutMetrics.recordActivityOnCreate(<span class="keyword">this</span>)
+        <span class="comment">// ... rest of onCreate</span>
+    }
+}
+                    </div>
+                </div>
+            </div>
+
+            <div class="method">
+                <h3>recordFirstDraw(activity: Activity)</h3>
+                <p>Records the first draw time for accurate startup measurement.</p>
+            </div>
+
+            <div class="method">
+                <h3>getStartupTimeInfo()</h3>
+                <p>Retrieves startup time information if tracking was set up.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer style="background: #2c3e50; color: white; text-align: center; padding: 40px 0; margin-top: 60px;">
+        <div class="container">
+            <p>&copy; 2024 PerfScout. Made with ❤️ by <a href="https://github.com/deekshasinghal326" style="color: #667eea;">Deeksha Singhal</a></p>
+        </div>
+    </footer>
+</body>
+</html> 

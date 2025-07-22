@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PerfScout - Android Performance Monitoring Library</title>
+    <meta name="description" content="PerfScout is a modular Android library that provides easy, permission-less access to vital app and device performance metrics with a single method call per feature.">
+    <meta name="keywords" content="android, performance, monitoring, library, kotlin, java, cpu, memory, battery, network, gpu, anr, crash, jank">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="PerfScout - Android Performance Monitoring Library">
+    <meta property="og:description" content="Easy, permission-less access to vital app and device performance metrics">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://deekshasinghal326.github.io/perfScout/">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PerfScout - Android Performance Monitoring Library">
+    <meta name="twitter:description" content="Easy, permission-less access to vital app and device performance metrics">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .badges {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+        
+        .badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .badge:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        main {
+            padding: 80px 0;
+        }
+        
+        .section {
+            margin-bottom: 80px;
+        }
+        
+        .section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #2c3e50;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        
+        .highlight {
+            color: #f56565;
+        }
+        
+        .comment {
+            color: #718096;
+        }
+        
+        .string {
+            color: #68d391;
+        }
+        
+        .keyword {
+            color: #90cdf4;
+        }
+        
+        .usage-section {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 40px 0;
+        }
+        
+        .usage-section h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 40px 0;
+            margin-top: 80px;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .social-links a {
+            color: white;
+            margin: 0 10px;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="hero">
+                <h1>PerfScout</h1>
+                <p>Easy, permission-less access to vital app and device performance metrics</p>
+                
+                <div class="badges">
+                    <a href="https://jitpack.io/#deekshasinghal326/perfScout" class="badge">
+                        📦 JitPack
+                    </a>
+                    <a href="https://github.com/deekshasinghal326/perfScout" class="badge">
+                        🐙 GitHub
+                    </a>
+                    <span class="badge">📱 Android</span>
+                    <span class="badge">⚡ Performance</span>
+                </div>
+                
+                <div class="cta-buttons">
+                    <a href="#quick-start" class="btn btn-primary">Get Started</a>
+                    <a href="https://github.com/deekshasinghal326/perfScout" class="btn btn-secondary">View on GitHub</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="section">
+                <h2>Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>📊 Performance Metrics</h3>
+                        <p>Monitor CPU, RAM, GPU, Battery, Thermal, Network, Storage, and more with simple method calls.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🚀 Startup Time</h3>
+                        <p>Track cold start times and app launch performance with clear setup instructions.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>⚠️ ANR Detection</h3>
+                        <p>Safe, non-intrusive ANR monitoring with callback-based notifications.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>💥 Crash Monitoring</h3>
+                        <p>Chain to existing crash handlers without interference, providing additional insights.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📈 Jank Detection</h3>
+                        <p>Monitor slow and frozen frames with rolling window analysis.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🔍 Memory Leak Warning</h3>
+                        <p>Simple heuristic-based memory leak detection with usage history tracking.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="quick-start">
+                <h2>Quick Start</h2>
+                
+                <div class="usage-section">
+                    <h3>1. Add Dependency</h3>
+                    <div class="code-block">
+<span class="keyword">dependencies</span> {
+    <span class="keyword">implementation</span>(<span class="string">"com.github.deekshasinghal326:perfScout:1.1.4"</span>)
+}
+                    </div>
+                </div>
+
+                <div class="usage-section">
+                    <h3>2. Basic Usage</h3>
+                    <div class="code-block">
+<span class="comment">// Get performance metrics (new delegate-based API)</span>
+<span class="keyword">val</span> cpuResult = PerfScoutMetrics.cpu.get()
+<span class="keyword">val</span> ramResult = PerfScoutMetrics.ram.get(context)
+<span class="keyword">val</span> batteryResult = PerfScoutMetrics.battery.get(context)
+
+<span class="comment">// Handle results safely</span>
+<span class="keyword">when</span> (cpuResult) {
+    <span class="keyword">is</span> PerfResult.Success -> Log.d(<span class="string">"PerfScout"</span>, <span class="string">"CPU: ${cpuResult.info}"</span>)
+    <span class="keyword">is</span> PerfResult.Error -> Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Error: ${cpuResult.message}"</span>)
+}
+
+<span class="comment">// Monitor crashes and ANRs</span>
+PerfScoutMetrics.setCrashListener { crashInfo ->
+    Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Crash detected: $crashInfo"</span>)
+}
+PerfScoutMetrics.setAnrListener { anrInfo ->
+    Log.w(<span class="string">"PerfScout"</span>, <span class="string">"ANR detected: $anrInfo"</span>)
+}
+                    </div>
+                </div>
+
+                <div class="usage-section">
+                    <h3>3. Advanced Features</h3>
+                    <div class="code-block">
+<span class="comment">// Frame rendering analysis (async recommended)</span>
+lifecycleScope.launch {
+    <span class="keyword">val</span> frameResult = PerfScoutMetrics.frameRendering.getAsync()
+    <span class="keyword">when</span> (frameResult) {
+        <span class="keyword">is</span> PerfResult.Success -> {
+            println(<span class="string">"Performance Score: ${frameResult.info.performanceScore}"</span>)
+            println(<span class="string">"Jank Percentage: ${frameResult.info.jankPercentage}%"</span>)
+        }
+        <span class="keyword">is</span> PerfResult.Error -> Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Error: ${frameResult.message}"</span>)
+    }
+}
+
+<span class="comment">// Media quality analysis</span>
+<span class="keyword">val</span> analysisResult = PerfScoutMetrics.mediaQualityAnalysis.get(context)
+<span class="keyword">when</span> (analysisResult) {
+    <span class="keyword">is</span> PerfResult.Success -> {
+        println(<span class="string">"Network Speed: ${analysisResult.info.networkSpeed}"</span>)
+        println(<span class="string">"Recommended Quality: ${analysisResult.info.recommendedQuality}"</span>)
+    }
+    <span class="keyword">is</span> PerfResult.Error -> Log.e(<span class="string">"PerfScout"</span>, <span class="string">"Error: ${analysisResult.message}"</span>)
+}
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>⚠️ Threading Requirements</h2>
+                <div class="usage-section">
+                    <h3>Important Notes</h3>
+                    <div class="code-block">
+<span class="comment">// Some synchronous get() methods must NOT be called from main thread</span>
+<span class="comment">// Use async versions for UI/main thread code:</span>
+
+<span class="comment">// ❌ Don't do this on main thread:</span>
+<span class="comment">// val frameResult = PerfScoutMetrics.frameRendering.get()</span>
+<span class="comment">// val startupResult = PerfScoutMetrics.startupTime.get(context)</span>
+
+<span class="comment">// ✅ Do this instead:</span>
+lifecycleScope.launch {
+    <span class="keyword">val</span> frameResult = PerfScoutMetrics.frameRendering.getAsync()
+    <span class="keyword">val</span> startupResult = PerfScoutMetrics.startupTime.getAsync(context)
+}
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Why PerfScout?</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>🔒 Permission-less</h3>
+                        <p>Most features work without requiring special permissions, making integration seamless.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🧩 Modular Design</h3>
+                        <p>Use only the features you need. Each component works independently.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>⚡ Lightweight</h3>
+                        <p>Minimal overhead with efficient implementations that won't impact your app's performance.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🛡️ Safe Integration</h3>
+                        <p>Non-intrusive monitoring that chains to existing handlers without breaking functionality.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div>
+                    <p>&copy; 2024 PerfScout. Made with ❤️ by <a href="https://github.com/deekshasinghal326" style="color: #667eea;">Deeksha Agrawal</a></p>
+                </div>
+                <div class="social-links">
+                    <a href="https://github.com/deekshasinghal326/perfScout">🐙 GitHub</a>
+                    <a href="https://jitpack.io/#deekshasinghal326/perfScout">📦 JitPack</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html> 
