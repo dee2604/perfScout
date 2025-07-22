@@ -56,7 +56,7 @@ afterEvaluate {
 
                 groupId = "io.github.deekshasinghal326"
                 artifactId = "perfscout"
-                version = "1.1.4"
+                version = "1.1.6"
 
                 pom {
                     name.set("PerfScout")
@@ -86,7 +86,7 @@ afterEvaluate {
                         connection.set("scm:git:git://github.com/deekshasinghal326/perfScout.git")
                         developerConnection.set("scm:git:ssh://github.com/deekshasinghal326/perfScout.git")
                         url.set("https://github.com/deekshasinghal326/perfScout")
-                        tag.set("v1.1.4")
+                        tag.set("v1.1.6")
                     }
                     
                     issueManagement {
@@ -107,8 +107,8 @@ afterEvaluate {
                 name = "OSSRH"
                 url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
                 credentials {
-                    username = System.getenv("OSSRH_USERNAME") ?: ""
-                    password = System.getenv("OSSRH_PASSWORD") ?: ""
+                    username = project.findProperty("ossrhUsername") as String? ?: ""
+                    password = project.findProperty("ossrhPassword") as String? ?: ""
                 }
             }
         }
@@ -116,12 +116,12 @@ afterEvaluate {
     
     // Signing configuration for Maven Central
     signing {
-        val signingKey = System.getenv("SIGNING_KEY_ID")
-        val signingPassword = System.getenv("GPG_PASSPHRASE")
-        val signingPrivateKey = System.getenv("GPG_PRIVATE_KEY")
+        val signingKeyId = project.findProperty("signing.keyId") as String?
+        val signingPassword = project.findProperty("signing.password") as String?
+        val signingKey = project.findProperty("signing.key") as String?
 
-        if (!signingKey.isNullOrBlank() && !signingPrivateKey.isNullOrBlank() && !signingPassword.isNullOrBlank()) {
-            useInMemoryPgpKeys(signingKey, signingPrivateKey, signingPassword)
+        if (!signingKeyId.isNullOrBlank() && !signingKey.isNullOrBlank() && !signingPassword.isNullOrBlank()) {
+            useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
             sign(publishing.publications)
         }
     }
