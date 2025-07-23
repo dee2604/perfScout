@@ -45,6 +45,7 @@ coverage/
 
   private-key.asc
   public-key.asc
+  private-key-base64.txt
 
 # Ignore sample app build outputs
 sample/build/
