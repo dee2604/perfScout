@@ -1,51 +1,25 @@
-# Gradle
-.gradle/
-build/
-*/build/
-!gradle/wrapper/gradle-wrapper.jar
+# Sensitive keys
+private-key.asc
+private-key-base64.txt
+public-key.asc
 
-# Local configuration file (sdk path, etc)
-local.properties
+# Build outputs
+/build/
+app/build/
+sample/build/
 
-# Log/OS Files
-*.log
-*.swp
-.DS_Store
-
-# Android Studio
+# IDE and OS files
 .idea/
 *.iml
-*.ipr
-*.iws
+.DS_Store
+*.swp
+*.bak
 
-# VS Code
-.vscode/
+# Gradle
+.gradle/
 
-# Kotlin
-.kotlin/
-
-# Generated files
-captures/
-output.json
+# Local properties
+local.properties
 
 # Misc
-*.keystore
-*.jks
-
-# Mac
-__MACOSX/
-
-# Test/coverage
-*.ec
-coverage/
-
-# Other
-*.orig
-*.rej
-
-  private-key.asc
-  public-key.asc
-  private-key-base64.txt
-
-# Ignore sample app build outputs
-sample/build/
+*.log
