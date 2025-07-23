@@ -1,11 +1,11 @@
 # Keep the PerfScout public API (including all methods and fields)
--keep class com.deelib.perfScout.PerfScout { *; }
+-keep class io.github.dee2604.perfScout.PerfScoutMetrics { *; }
 
 # Keep all API interfaces and delegates
--keep class com.deelib.perfScout.api.** { *; }
+-keep class io.github.dee2604.perfscout.api.** { *; }
 
 # Keep all metric/data/provider classes in all subpackages
--keep class com.deelib.perfScout.** { *; }
+-keep class io.github.dee2604.perfscout.** { *; }
 
 # Keep annotations (optional, but good for libraries)
 -keepattributes *Annotation*

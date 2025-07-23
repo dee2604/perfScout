@@ -1,6 +1,6 @@
 # PerfScout
 
-[![JitPack](https://jitpack.io/v/deekshasinghal326/perfScout.svg)](https://jitpack.io/#deekshasinghal326/perfScout)
+[![JitPack](https://jitpack.io/v/dee2604/perfScout.svg)](https://jitpack.io/#dee2604/perfScout)
 
 **PerfScout** provides unified, safe, and modular access to all vital app and device performance metrics and monitoring features through a single, easy-to-use API.
 
@@ -71,7 +71,7 @@ PerfScoutMetrics.enableStrictMode(penaltyCallback = { violation ->
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("io.github.deekshasinghal326:perfscout:1.1.4")
+    implementation("io.github.dee2604:perfscout:1.1.8")
 }
 ```
 
@@ -79,7 +79,7 @@ dependencies {
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.github.deekshasinghal326:perfScout:1.1.4")
+    implementation("com.github.dee2604:perfScout:1.1.8")
 }
 ```
 
@@ -87,7 +87,7 @@ dependencies {
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("io.github.deekshasinghal326:perfscout:1.1.4")
+    implementation("io.github.dee2604:perfscout:1.1.8")
 }
 ```
 

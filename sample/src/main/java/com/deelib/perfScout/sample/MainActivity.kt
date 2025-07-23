@@ -14,9 +14,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.deelib.perfScout.*
-import com.deelib.perfScout.api.PerfResult
 import com.deelib.perfScout.sample.ui.theme.PerfScoutTheme
+import io.github.dee2604.perfScout.PerfScoutMetrics
+import io.github.dee2604.perfScout.api.PerfResult
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.deelib.perfScout"
+    namespace = "io.github.dee2604.perfscout"
     compileSdk = 35
 
     defaultConfig {
@@ -54,14 +54,14 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
 
-                groupId = "io.github.deekshasinghal326"
+                groupId = "io.github.dee2604"
                 artifactId = "perfscout"
-                version = "1.1.6"
+                version = "1.1.8"
 
                 pom {
                     name.set("PerfScout")
                     description.set("Unified Android Performance & Usage Metrics Library - provides safe, modular, and permissionless access to all vital app and device performance metrics through a single, unified API surface.")
-                    url.set("https://github.com/deekshasinghal326/perfScout")
+                    url.set("https://github.com/dee2604/perfScout")
                     
                     inceptionYear.set("2024")
 
@@ -75,28 +75,28 @@ afterEvaluate {
 
                     developers {
                         developer {
-                            id.set("deekshasinghal326")
+                            id.set("dee2604")
                             name.set("Deeksha Agrawal")
                             email.set("deekshasinghal3@gmail.com")
-                            url.set("https://github.com/deekshasinghal326")
+                            url.set("https://github.com/dee2604")
                         }
                     }
 
                     scm {
-                        connection.set("scm:git:git://github.com/deekshasinghal326/perfScout.git")
-                        developerConnection.set("scm:git:ssh://github.com/deekshasinghal326/perfScout.git")
-                        url.set("https://github.com/deekshasinghal326/perfScout")
+                        connection.set("scm:git:git://github.com/dee2604/perfScout.git")
+                        developerConnection.set("scm:git:ssh://github.com/dee2604/perfScout.git")
+                        url.set("https://github.com/dee2604/perfScout")
                         tag.set("v1.1.6")
                     }
                     
                     issueManagement {
                         system.set("GitHub")
-                        url.set("https://github.com/deekshasinghal326/perfScout/issues")
+                        url.set("https://github.com/dee2604/perfScout/issues")
                     }
                     
                     ciManagement {
                         system.set("GitHub Actions")
-                        url.set("https://github.com/deekshasinghal326/perfScout/actions")
+                        url.set("https://github.com/dee2604/perfScout/actions")
                     }
                 }
             }

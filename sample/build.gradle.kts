@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.deelib.perfScout.sample"
+    namespace = "io.github.dee2604.perfscout.sample"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.deelib.perfScout.sample"
+        applicationId = "io.github.dee2604.perfscout.sample"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

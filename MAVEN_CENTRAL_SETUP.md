@@ -7,7 +7,7 @@ This guide explains how to publish PerfScout to Maven Central.
 ### 1. Sonatype OSSRH Account
 - Go to [OSSRH](https://s01.oss.sonatype.org/)
 - Create an account
-- Request access to the `io.github.deekshasinghal326` group
+- Request access to the `io.github.dee2604` group
 - Wait for approval (usually 1-2 business days)
 
 ### 2. GPG Key Setup
@@ -64,7 +64,7 @@ After publishing, users can include PerfScout in their projects:
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("io.github.deekshasinghal326:perfscout:1.1.4")
+    implementation("io.github.dee2604:perfscout:1.1.8")
 }
 ```
 

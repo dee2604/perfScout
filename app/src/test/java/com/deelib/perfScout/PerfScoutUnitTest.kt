@@ -1,4 +1,4 @@
-package com.deelib.perfScout
+package com.deeksha.perfscout
 
 import org.junit.Assert.*
 import org.junit.Test
@@ -7,10 +7,10 @@ class PerfScoutUnitTest {
 
     @Test
     fun testMediaQualityLevelEnum() {
-        val values = com.deelib.perfScout.model.MediaQualityLevel.values()
-        assertTrue(values.contains(com.deelib.perfScout.model.MediaQualityLevel.LOW))
-        assertTrue(values.contains(com.deelib.perfScout.model.MediaQualityLevel.MEDIUM))
-        assertTrue(values.contains(com.deelib.perfScout.model.MediaQualityLevel.HIGH))
-        assertTrue(values.contains(com.deelib.perfScout.model.MediaQualityLevel.ULTRA))
+        val values = io.github.dee2604.perfscout.model.MediaQualityLevel.values()
+        assertTrue(values.contains(io.github.dee2604.perfscout.model.MediaQualityLevel.LOW))
+        assertTrue(values.contains(io.github.dee2604.perfscout.model.MediaQualityLevel.MEDIUM))
+        assertTrue(values.contains(io.github.dee2604.perfscout.model.MediaQualityLevel.HIGH))
+        assertTrue(values.contains(io.github.dee2604.perfscout.model.MediaQualityLevel.ULTRA))
     }
 } 
