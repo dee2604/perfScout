@@ -43,5 +43,8 @@ coverage/
 *.orig
 *.rej
 
+  private-key.asc
+  public-key.asc
+
 # Ignore sample app build outputs
 sample/build/
